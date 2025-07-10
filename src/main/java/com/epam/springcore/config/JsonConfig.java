@@ -11,7 +11,7 @@ public class JsonConfig {
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule()); // LocalDate desteği
+        objectMapper.registerModule(new JavaTimeModule());
         return objectMapper;
     }
 }

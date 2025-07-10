@@ -6,7 +6,7 @@ import java.util.Collection;
 
 public class User {
 
-    private static int counter = 0; // static ID counter
+    private static int counter = 0;
 
     protected String id;
     protected String firstName;

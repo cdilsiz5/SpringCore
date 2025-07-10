@@ -1,16 +1,10 @@
 package com.epam.springcore.init;
 
-import com.epam.springcore.dao.TraineeDao;
-import com.epam.springcore.dao.UserDao;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.User;
 import com.epam.springcore.request.TraineeInitializeRequest;
 import com.epam.springcore.service.ITraineeService;
 import com.epam.springcore.service.IUserService;
-import com.epam.springcore.service.TraineeServiceImpl;
-import com.epam.springcore.service.impl.UserServiceImpl;
-import com.epam.springcore.storage.TraineeStorage;
-import com.epam.springcore.storage.UserStorage;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
