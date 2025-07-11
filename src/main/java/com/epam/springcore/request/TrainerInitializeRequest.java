@@ -9,7 +9,7 @@ public class TrainerInitializeRequest {
     private String lastName;
     private TrainingType specialty;
 
-    public TrainerInitializeRequest() {}
+    public TrainerInitializeRequest(String ahmet, String kaya, TrainingType crossfit) {}
 
     public String getFirstName() {
         return firstName;
