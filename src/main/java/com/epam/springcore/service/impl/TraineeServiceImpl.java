@@ -3,6 +3,7 @@ package com.epam.springcore.service.impl;
 import com.epam.springcore.dao.TraineeDao;
 import com.epam.springcore.dao.UserDao;
 import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.User;
 import com.epam.springcore.request.CreateTraineeRequest;
@@ -49,7 +50,7 @@ public class TraineeServiceImpl implements ITraineeService {
         Trainee trainee = traineeDao.findById(id);
         if (trainee == null) {
             log.warn("Trainee with ID {} not found", id);
-            return null;
+            throw  new NotFoundException("Trainee not found");
         }
         User user = userDao.findById(trainee.getUserId());
         return toDto(trainee, user);
@@ -101,17 +102,16 @@ public class TraineeServiceImpl implements ITraineeService {
         Trainee existingTrainee = traineeDao.findById(id);
         if (existingTrainee == null) {
             log.error("Trainee with ID {} not found", id);
-            throw new RuntimeException("Trainee with ID: " + id + " not found");
+            throw new NotFoundException("Trainee with ID: " + id + " not found");
         }
         return existingTrainee;
     }
 
     private TraineeDto toDto(Trainee trainee, User user) {
-        TraineeDto dto = new TraineeDto("123", "ali", "yılmaz", LocalDate.of(2000, 1, 1), "istanbul");
+        TraineeDto dto = new TraineeDto();
         dto.setId(trainee.getUserId());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
-        dto.setUsername(user.getUsername());
         dto.setDateOfBirth(trainee.getDateOfBirth());
         dto.setAddress(trainee.getAddress());
         return dto;

@@ -8,18 +8,17 @@ public class TraineeDto {
     private String lastName;
     private LocalDate dateOfBirth;
     private String address;
-    private String username;
 
-    public TraineeDto(String number, String ali, String yılmaz, LocalDate localDate, String istanbul) {
+
+    public TraineeDto() {
     }
 
-    public TraineeDto(String id, String firstName, String lastName, LocalDate dateOfBirth, String address, String username) {
+    public TraineeDto(String id, String firstName, String lastName, LocalDate dateOfBirth, String address) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.dateOfBirth = dateOfBirth;
         this.address = address;
-        this.username = username;
 
     }
 
@@ -62,12 +61,5 @@ public class TraineeDto {
     public void setAddress(String address) {
         this.address = address;
     }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 }
+
