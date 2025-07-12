@@ -1,20 +1,17 @@
 package com.epam.springcore.init;
 
+import com.epam.springcore.dao.TrainingDao;
 import com.epam.springcore.model.Training;
 import com.epam.springcore.request.TrainingInitializeRequest;
 import com.epam.springcore.service.ITrainingService;
-import com.epam.springcore.storage.TrainingStorage;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 public class TrainingInitializer {
@@ -23,14 +20,13 @@ public class TrainingInitializer {
     private Resource trainingDataFile;
 
     private final ObjectMapper objectMapper;
-    private final ITrainingService trainingService;
+    private final TrainingDao trainingDao;
 
     @Autowired
-    public TrainingInitializer(ObjectMapper objectMapper,ITrainingService trainingService) {
+    public TrainingInitializer(ObjectMapper objectMapper,TrainingDao trainingDao) {
         this.objectMapper = objectMapper;
-        this.trainingService = trainingService;
+        this.trainingDao = trainingDao;
     }
-
     @PostConstruct
     public void init() {
         System.out.println("TrainingInitializer starting (JSON)...");
@@ -47,7 +43,8 @@ public class TrainingInitializer {
                         request.getDate(),
                         request.getType(),
                         request.getDurationMinutes());
-                trainingService.createTraining(training);
+
+                trainingDao.save(training);
                 System.out.println("Loaded training: " + training);
             }
 

@@ -1,6 +1,8 @@
 package com.epam.springcore.service;
 
-import com.epam.springcore.model.Trainee;
+import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.request.CreateTraineeRequest;
+
 import java.util.Collection;
 
 /**
@@ -9,24 +11,41 @@ import java.util.Collection;
 public interface ITraineeService {
 
     /**
-     * Saves a new trainee to the system.
+     * Creates a new trainee based on the given request.
      *
-     * @param trainee the trainee to be saved
+     * @param request the request object containing trainee data
+     * @return the created Trainee as DTO
      */
-    void createTrainee(Trainee trainee);
+    TraineeDto createTrainee(CreateTraineeRequest request);
 
     /**
      * Retrieves a trainee by their ID.
      *
      * @param id the ID of the trainee
-     * @return the found Trainee or null if not found
+     * @return the found Trainee DTO or null if not found
      */
-    Trainee getTrainee(String id);
+    TraineeDto getTrainee(String id);
 
     /**
      * Returns all trainees in the system.
      *
-     * @return a collection of all trainees
+     * @return a collection of Trainee DTOs
      */
-    Collection<Trainee> getAllTrainees();
+    Collection<TraineeDto> getAllTrainees();
+
+    /**
+     * Updates an existing trainee by ID.
+     *
+     * @param id the ID of the trainee to update
+     * @param request the updated data
+     * @return the created Trainee as DTO
+     */
+    TraineeDto updateTrainee(String id, CreateTraineeRequest request);
+
+    /**
+     * Deletes a trainee by their ID.
+     *
+     * @param id the ID of the trainee to delete
+     */
+    void deleteTrainee(String id);
 }

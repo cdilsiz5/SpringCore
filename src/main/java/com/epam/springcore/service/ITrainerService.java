@@ -1,6 +1,8 @@
 package com.epam.springcore.service;
 
-import com.epam.springcore.model.Trainer;
+import com.epam.springcore.dto.TrainerDto;
+import com.epam.springcore.request.CreateTrainerRequest;
+
 import java.util.Collection;
 
 /**
@@ -9,24 +11,41 @@ import java.util.Collection;
 public interface ITrainerService {
 
     /**
-     * Saves a new trainer to the system.
+     * Creates a new trainer based on the given request.
      *
-     * @param trainer the trainer to be saved
+     * @param request the request object containing trainer data
+     * @return the created Trainer as DTO
      */
-    void createTrainer(Trainer trainer);
+    TrainerDto createTrainer(CreateTrainerRequest request);
 
     /**
      * Retrieves a trainer by their ID.
      *
      * @param id the ID of the trainer
-     * @return the found Trainer or null if not found
+     * @return the found Trainer DTO or null if not found
      */
-    Trainer getTrainer(String id);
+    TrainerDto getTrainer(String id);
 
     /**
      * Returns all trainers in the system.
      *
-     * @return a collection of all trainers
+     * @return a collection of Trainer DTOs
      */
-    Collection<Trainer> getAllTrainers();
+    Collection<TrainerDto> getAllTrainers();
+
+    /**
+     * Updates an existing trainer by ID.
+     *
+     * @param id the ID of the trainer to update
+     * @param request the updated data
+     * @return the found Trainer DTO or null if not found
+     */
+    TrainerDto updateTrainer(String id, CreateTrainerRequest request);
+
+    /**
+     * Deletes a trainer by their ID.
+     *
+     * @param id the ID of the trainer to delete
+     */
+    void deleteTrainer(String id);
 }

@@ -17,8 +17,9 @@ public class TrainerDao {
         this.trainerStorage = trainerStorage;
     }
 
-    public void save(Trainer trainer) {
+    public Trainer save(Trainer trainer) {
         trainerStorage.getTrainerMap().put(trainer.getUserId(), trainer);
+        return trainerStorage.getTrainerMap().get(trainer.getUserId());
     }
 
     public Trainer findById(String id) {

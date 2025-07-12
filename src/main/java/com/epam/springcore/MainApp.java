@@ -1,35 +1,38 @@
 package com.epam.springcore;
 
+
 import com.epam.springcore.config.AppConfig;
-import com.epam.springcore.facade.GymFacade;
-import com.epam.springcore.model.Trainee;
-import com.epam.springcore.model.Trainer;
-import com.epam.springcore.model.Training;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.apache.catalina.startup.Tomcat;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.servlet.DispatcherServlet;
+
+import java.io.File;
 
 public class MainApp {
-    public static void main(String[] args) {
 
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
-        GymFacade facade = context.getBean(GymFacade.class);
+    public static void main(String[] args) throws Exception {
+        AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
+        context.register(AppConfig.class);
+        context.refresh();
 
-        System.out.println("===== TRAINERS FROM JSON =====");
-        for (int i = 6; i <= 10; i++) {
-            Trainer trainer = facade.getTrainer(String.valueOf(i));
-            System.out.println("Trainer ID " + i + ": " + trainer);
-        }
+        Tomcat tomcat = new Tomcat();
+        tomcat.setPort(8080);
+        tomcat.setBaseDir("temp");
 
-        System.out.println("\n===== TRAINEES FROM JSON =====");
-        for (int i = 1; i <= 5; i++) {
-            Trainee trainee = facade.getTrainee(String.valueOf(i));
-            System.out.println("Trainee ID " + i + ": " + trainee);
-        }
+        var contextPath = "";
+        var docBase = new File("src/main/webapp");
+        if (!docBase.exists()) docBase.mkdirs();
 
-        System.out.println("\n===== TRAININGS FROM JSON =====");
-        for (Training training : facade.listTrainings()) {
-            System.out.println(training);
-        }
+        var tomcatCtx = tomcat.addWebapp(contextPath, docBase.getAbsolutePath());
 
-        context.close();
+        var servlet = new DispatcherServlet(context);
+        Tomcat.addServlet(tomcatCtx, "dispatcher", servlet).setLoadOnStartup(1);
+        tomcatCtx.addServletMappingDecoded("/", "dispatcher");
+
+        tomcat.start();
+        System.out.println("Tomcat started on http://localhost:8080/");
+        tomcat.getServer().await();
     }
 }
+
+

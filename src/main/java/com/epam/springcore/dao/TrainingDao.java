@@ -1,5 +1,6 @@
 package com.epam.springcore.dao;
 
+import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Training;
 import com.epam.springcore.storage.TrainingStorage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +18,10 @@ public class TrainingDao {
         this.trainingStorage = trainingStorage;
     }
 
-    public void save(Training training) {
+    public Training save(Training training) {
         trainingStorage.getTrainingMap().put(training.getId(), training);
+        return trainingStorage.getTrainingMap().get(training.getId()) ;
     }
-
     public Training findById(String id) {
         return trainingStorage.getTrainingMap().get(id);
     }
@@ -28,4 +29,10 @@ public class TrainingDao {
     public Collection<Training> findAll() {
         return trainingStorage.getTrainingMap().values();
     }
+
+    public void delete(String id) {
+        trainingStorage.getTrainingMap().remove(id);
+    }
+
+
 }
