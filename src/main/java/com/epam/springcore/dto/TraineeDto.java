@@ -10,7 +10,7 @@ public class TraineeDto {
     private String address;
     private String username;
 
-    public TraineeDto() {
+    public TraineeDto(String number, String ali, String yılmaz, LocalDate localDate, String istanbul) {
     }
 
     public TraineeDto(String id, String firstName, String lastName, LocalDate dateOfBirth, String address, String username) {

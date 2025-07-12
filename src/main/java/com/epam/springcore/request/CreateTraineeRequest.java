@@ -18,6 +18,9 @@ public class CreateTraineeRequest {
     @NotBlank(message = "Address is required")
     private String address;
 
+    public CreateTraineeRequest(String ali, String yılmaz, LocalDate localDate, String istanbul) {
+    }
+
     public CreateTraineeRequest() {
     }
 

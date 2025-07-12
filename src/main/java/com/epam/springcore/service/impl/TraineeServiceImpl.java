@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -106,7 +107,7 @@ public class TraineeServiceImpl implements ITraineeService {
     }
 
     private TraineeDto toDto(Trainee trainee, User user) {
-        TraineeDto dto = new TraineeDto();
+        TraineeDto dto = new TraineeDto("123", "ali", "yılmaz", LocalDate.of(2000, 1, 1), "istanbul");
         dto.setId(trainee.getUserId());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
