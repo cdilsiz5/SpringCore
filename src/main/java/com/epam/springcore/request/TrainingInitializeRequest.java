@@ -8,11 +8,13 @@ public class TrainingInitializeRequest {
     private String type;
     private int durationMinutes;
 
+
     public TrainingInitializeRequest() {}
 
     public String getTraineeId() {
         return traineeId;
     }
+
 
     public void setTraineeId(String traineeId) {
         this.traineeId = traineeId;

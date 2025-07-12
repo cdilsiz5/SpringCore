@@ -4,6 +4,7 @@ import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.request.CreateTrainingRequest;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Service interface for managing Training entities.
@@ -31,7 +32,7 @@ public interface ITrainingService {
      *
      * @return a collection of Training DTOs
      */
-    Collection<TrainingDto> getAllTrainings();
+    List<TrainingDto> getAllTrainings();
 
     /**
      * Updates an existing training session by ID.

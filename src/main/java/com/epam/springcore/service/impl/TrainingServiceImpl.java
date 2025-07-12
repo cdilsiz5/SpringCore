@@ -1,38 +1,48 @@
 package com.epam.springcore.service.impl;
 
 import com.epam.springcore.dao.TrainingDao;
+import com.epam.springcore.dao.UserDao;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Training;
+import com.epam.springcore.model.User;
 import com.epam.springcore.request.CreateTrainingRequest;
 import com.epam.springcore.service.ITrainingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import static com.epam.springcore.mapper.TrainingMapper.TRAINING_MAPPER;
 
 @Service
 public class TrainingServiceImpl implements ITrainingService {
+
     private static final Logger log = LoggerFactory.getLogger(TrainingServiceImpl.class);
 
-
     private final TrainingDao trainingDao;
+    private final UserDao userDao;
 
-    public TrainingServiceImpl(TrainingDao trainingDao) {
+    public TrainingServiceImpl(TrainingDao trainingDao, UserDao userDao) {
         this.trainingDao = trainingDao;
+        this.userDao = userDao;
     }
 
     @Override
     public TrainingDto createTraining(CreateTrainingRequest request) {
-        log.info("Creating new training between trainerId={} and traineeId={}", request.getTrainerId(), request.getTraineeId());
+        log.info("Creating new training between trainerId={} and traineeId={}",
+                request.getTrainerId(), request.getTraineeId());
 
-        Training training = TRAINING_MAPPER.toTraining(request);
+        Training training = new Training(
+                request.getTraineeId(),
+                request.getTrainerId(),
+                request.getDate(),
+                request.getType(),
+                request.getDurationMinutes()
+        );
         Training saved = trainingDao.save(training);
 
         log.debug("Training saved with id={}", saved.getId());
-        return TRAINING_MAPPER.toTrainingDto(saved);
+        return toDto(saved);
     }
 
     @Override
@@ -43,23 +53,34 @@ public class TrainingServiceImpl implements ITrainingService {
             log.warn("Training with ID {} not found", id);
             return null;
         }
-        return TRAINING_MAPPER.toTrainingDto(training);
+        return toDto(training);
     }
 
     @Override
     public List<TrainingDto> getAllTrainings() {
         log.info("Fetching all trainings");
-        return TRAINING_MAPPER.toTrainingDtoList((List<Training>) trainingDao.findAll());
+        List<Training> trainings = (List<Training>) trainingDao.findAll();
+        List<TrainingDto> dtos = new ArrayList<>();
+        for (Training training : trainings) {
+            dtos.add(toDto(training));
+        }
+        return dtos;
     }
 
     @Override
     public TrainingDto updateTraining(String id, CreateTrainingRequest request) {
         log.info("Updating training with ID: {}", id);
         Training existingTraining = checkTrainingExist(id);
-        TRAINING_MAPPER.updateTraining(request, existingTraining);
+
+        existingTraining.setTraineeId(request.getTraineeId());
+        existingTraining.setTrainerId(request.getTrainerId());
+        existingTraining.setDate(request.getDate());
+        existingTraining.setType(request.getType());
+        existingTraining.setDurationMinutes(request.getDurationMinutes());
+
         Training updated = trainingDao.save(existingTraining);
         log.debug("Training with ID {} updated", id);
-        return TRAINING_MAPPER.toTrainingDto(updated);
+        return toDto(updated);
     }
 
     @Override
@@ -77,5 +98,20 @@ public class TrainingServiceImpl implements ITrainingService {
             throw new RuntimeException("Training with ID: " + id + " not found");
         }
         return existingTraining;
+    }
+
+    private TrainingDto toDto(Training training) {
+        User trainer = userDao.findById(training.getTrainerId());
+        User trainee = userDao.findById(training.getTraineeId());
+
+        TrainingDto dto = new TrainingDto();
+        dto.setId(training.getId());
+        dto.setTrainerId(trainer.getId());
+        dto.setTraineeId(trainee.getId());
+        dto.setDate(training.getDate());
+        dto.setType(training.getType());
+        dto.setDurationMinutes(training.getDurationMinutes());
+
+        return dto;
     }
 }

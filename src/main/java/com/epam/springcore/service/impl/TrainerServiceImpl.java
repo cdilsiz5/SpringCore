@@ -1,37 +1,42 @@
 package com.epam.springcore.service.impl;
 
 import com.epam.springcore.dao.TrainerDao;
+import com.epam.springcore.dao.UserDao;
 import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.model.Trainer;
+import com.epam.springcore.model.User;
 import com.epam.springcore.request.CreateTrainerRequest;
 import com.epam.springcore.service.ITrainerService;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import static com.epam.springcore.mapper.TrainerMapper.TRAINER_MAPPER;
-
 
 @Service
 public class TrainerServiceImpl implements ITrainerService {
     private static final Logger log = LoggerFactory.getLogger(TrainerServiceImpl.class);
-
     private final TrainerDao trainerDao;
+    private final UserDao userDao;
 
-    public TrainerServiceImpl(TrainerDao trainerDao) {
+    public TrainerServiceImpl(TrainerDao trainerDao, UserDao userDao) {
         this.trainerDao = trainerDao;
+        this.userDao = userDao;
     }
 
     @Override
     public TrainerDto createTrainer(CreateTrainerRequest request) {
         log.info("Creating new trainer: {} {}", request.getFirstName(), request.getLastName());
-        Trainer trainer = TRAINER_MAPPER.toTrainer(request);
-        Trainer saved = trainerDao.save(trainer);
-        log.debug("Trainer saved with userId={}", saved.getUserId());
-        return TRAINER_MAPPER.toTrainerDto(saved);
+
+        User user = new User(request.getFirstName(), request.getLastName(), trainerDao.findAll());
+        userDao.save(user);
+
+        Trainer trainer = new Trainer(request.getSpecialty(), user.getId());
+        Trainer savedTrainer = trainerDao.save(trainer);
+
+        log.debug("Trainer saved with userId={}", user.getId());
+        return getTrainerDto(savedTrainer, user);
     }
 
     @Override
@@ -42,23 +47,36 @@ public class TrainerServiceImpl implements ITrainerService {
             log.warn("Trainer with ID {} not found", id);
             return null;
         }
-        return TRAINER_MAPPER.toTrainerDto(trainer);
+
+        User user = userDao.findById(trainer.getUserId());
+        return getTrainerDto(trainer, user);
     }
 
     @Override
     public List<TrainerDto> getAllTrainers() {
         log.info("Fetching all trainers");
-        return TRAINER_MAPPER.toTrainerDtoList((List<Trainer>) trainerDao.findAll());
+        List<Trainer> trainers = (List<Trainer>) trainerDao.findAll();
+        List<TrainerDto> dtoList = new ArrayList<>();
+
+        for (Trainer trainer : trainers) {
+            User user = userDao.findById(trainer.getUserId());
+            dtoList.add(getTrainerDto(trainer, user));
+        }
+
+        return dtoList;
     }
 
     @Override
     public TrainerDto updateTrainer(String id, CreateTrainerRequest request) {
         log.info("Updating trainer with ID: {}", id);
         Trainer existingTrainer = checkTrainerExist(id);
-        TRAINER_MAPPER.updateTrainer(request, existingTrainer);
-        Trainer updated = trainerDao.save(existingTrainer);
+        existingTrainer.setSpecialization(request.getSpecialty());
+        Trainer updatedTrainer = trainerDao.save(existingTrainer);
+
+        User user = userDao.findById(existingTrainer.getUserId());
+
         log.debug("Trainer with ID {} updated", id);
-        return TRAINER_MAPPER.toTrainerDto(updated);
+        return getTrainerDto(updatedTrainer, user);
     }
 
     @Override
@@ -76,5 +94,15 @@ public class TrainerServiceImpl implements ITrainerService {
             throw new RuntimeException("Trainer with ID: " + id + " not found");
         }
         return existingTrainer;
+    }
+
+    private TrainerDto getTrainerDto(Trainer trainer, User user) {
+        TrainerDto dto = new TrainerDto();
+        dto.setId(trainer.getUserId());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setUsername(user.getUsername());
+        dto.setSpecialization(trainer.getSpecialization().toString());
+        return dto;
     }
 }

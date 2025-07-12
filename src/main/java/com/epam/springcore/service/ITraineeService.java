@@ -4,6 +4,7 @@ import com.epam.springcore.dto.TraineeDto;
 import com.epam.springcore.request.CreateTraineeRequest;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Service interface for managing Trainee entities.
@@ -31,7 +32,7 @@ public interface ITraineeService {
      *
      * @return a collection of Trainee DTOs
      */
-    Collection<TraineeDto> getAllTrainees();
+    List<TraineeDto> getAllTrainees();
 
     /**
      * Updates an existing trainee by ID.

@@ -4,6 +4,7 @@ import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.request.CreateTrainerRequest;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Service interface for managing Trainer entities.
@@ -31,7 +32,7 @@ public interface ITrainerService {
      *
      * @return a collection of Trainer DTOs
      */
-    Collection<TrainerDto> getAllTrainers();
+    List<TrainerDto> getAllTrainers();
 
     /**
      * Updates an existing trainer by ID.

@@ -10,6 +10,9 @@ public class TraineeInitializeRequest {
     private LocalDate dateOfBirth;
     private String address;
 
+    public TraineeInitializeRequest() {
+    }
+
     public TraineeInitializeRequest(String ali, String yılmaz, String date, String ankara) {}
 
     public String getId() {
