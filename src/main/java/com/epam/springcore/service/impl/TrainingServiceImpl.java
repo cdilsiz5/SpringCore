@@ -5,6 +5,7 @@ import com.epam.springcore.dao.UserDao;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Training;
 import com.epam.springcore.model.User;
+import com.epam.springcore.model.enums.TrainingType;
 import com.epam.springcore.request.CreateTrainingRequest;
 import com.epam.springcore.service.ITrainingService;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class TrainingServiceImpl implements ITrainingService {
                 request.getTraineeId(),
                 request.getTrainerId(),
                 request.getDate(),
-                request.getType(),
+                TrainingType.valueOf(request.getType().toUpperCase()),
                 request.getDurationMinutes()
         );
         Training saved = trainingDao.save(training);
@@ -75,7 +76,7 @@ public class TrainingServiceImpl implements ITrainingService {
         existingTraining.setTraineeId(request.getTraineeId());
         existingTraining.setTrainerId(request.getTrainerId());
         existingTraining.setDate(request.getDate());
-        existingTraining.setType(request.getType());
+        existingTraining.setType(TrainingType.valueOf(request.getType().toUpperCase()));
         existingTraining.setDurationMinutes(request.getDurationMinutes());
 
         Training updated = trainingDao.save(existingTraining);
@@ -109,7 +110,7 @@ public class TrainingServiceImpl implements ITrainingService {
         dto.setTrainerId(trainer.getId());
         dto.setTraineeId(trainee.getId());
         dto.setDate(training.getDate());
-        dto.setType(training.getType());
+        dto.setType(training.getType().toString());
         dto.setDurationMinutes(training.getDurationMinutes());
 
         return dto;

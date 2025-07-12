@@ -1,15 +1,17 @@
 package com.epam.springcore.model;
 
+import com.epam.springcore.model.enums.TrainingType;
+
 public class Training {
     private String id;
     private String traineeId;
     private String trainerId;
     private String date;
-    private String type;
+    private TrainingType type;
     private int durationMinutes;
     private static int counter = 0;
 
-    public Training(String traineeId, String trainerId, String date, String type, int durationMinutes) {
+    public Training(String traineeId, String trainerId, String date, TrainingType type, int durationMinutes) {
         this.traineeId = traineeId;
         this.trainerId = trainerId;
         this.date = date;
@@ -51,11 +53,11 @@ public class Training {
         this.date = date;
     }
 
-    public String getType() {
+    public TrainingType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(TrainingType type) {
         this.type = type;
     }
 

@@ -23,6 +23,9 @@ public class CreateTrainerRequest {
         this.specialty = specialty;
     }
 
+    public CreateTrainerRequest() {
+    }
+
     public String getFirstName() {
         return firstName;
     }

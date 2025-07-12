@@ -18,6 +18,9 @@ public class CreateTraineeRequest {
     @NotBlank(message = "Address is required")
     private String address;
 
+    public CreateTraineeRequest() {
+    }
+
     public String getFirstName() {
         return firstName;
     }

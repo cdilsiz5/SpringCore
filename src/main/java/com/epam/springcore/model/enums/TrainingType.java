@@ -6,5 +6,6 @@ public enum TrainingType {
     YOGA,
     WEIGHTLIFTING,
     CROSSFIT,
+    STRENGTH,
     PILATES
 }

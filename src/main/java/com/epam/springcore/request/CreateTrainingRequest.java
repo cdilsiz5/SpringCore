@@ -26,6 +26,9 @@ public class CreateTrainingRequest {
         this.durationMinutes = durationMinutes;
     }
 
+    public CreateTrainingRequest() {
+    }
+
     public String getTraineeId() {
         return traineeId;
     }

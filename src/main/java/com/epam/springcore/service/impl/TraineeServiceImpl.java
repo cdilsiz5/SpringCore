@@ -7,6 +7,7 @@ import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.User;
 import com.epam.springcore.request.CreateTraineeRequest;
 import com.epam.springcore.service.ITraineeService;
+import com.epam.springcore.util.CredentialGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -71,7 +72,12 @@ public class TraineeServiceImpl implements ITraineeService {
     public TraineeDto updateTrainee(String id, CreateTraineeRequest request) {
         log.info("Updating trainee with ID: {}", id);
         Trainee existingTrainee = checkTraineeExist(id);
-
+        User existingUser = userDao.findById(existingTrainee.getUserId());
+        existingUser.setFirstName(request.getFirstName());
+        existingUser.setLastName(request.getLastName());
+        existingUser.setUsername( CredentialGenerator.generateUsername(request
+                .getFirstName(), request.getLastName(),traineeDao.findAll()));
+        userDao.save(existingUser);
         existingTrainee.setDateOfBirth(request.getDateOfBirth());
         existingTrainee.setAddress(request.getAddress());
 

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.List;
 
 @Repository
 public class TrainingDao {
@@ -26,8 +27,8 @@ public class TrainingDao {
         return trainingStorage.getTrainingMap().get(id);
     }
 
-    public Collection<Training> findAll() {
-        return trainingStorage.getTrainingMap().values();
+    public List<Training> findAll() {
+        return trainingStorage.getTrainingMap().values().stream().toList();
     }
 
     public void delete(String id) {

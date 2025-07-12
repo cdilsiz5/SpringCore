@@ -7,6 +7,7 @@ import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.User;
 import com.epam.springcore.request.CreateTrainerRequest;
 import com.epam.springcore.service.ITrainerService;
+import com.epam.springcore.util.CredentialGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -70,6 +71,13 @@ public class TrainerServiceImpl implements ITrainerService {
     public TrainerDto updateTrainer(String id, CreateTrainerRequest request) {
         log.info("Updating trainer with ID: {}", id);
         Trainer existingTrainer = checkTrainerExist(id);
+
+        User existingUser = userDao.findById(existingTrainer.getUserId());
+        existingUser.setFirstName(request.getFirstName());
+        existingUser.setLastName(request.getLastName());
+        existingUser.setUsername( CredentialGenerator.generateUsername(request
+                .getFirstName(), request.getLastName(),trainerDao.findAll()));
+        userDao.save(existingUser);
         existingTrainer.setSpecialization(request.getSpecialty());
         Trainer updatedTrainer = trainerDao.save(existingTrainer);
 

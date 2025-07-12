@@ -27,7 +27,7 @@ public class TrainerDao {
     }
 
     public Collection<Trainer> findAll() {
-        return trainerStorage.getTrainerMap().values();
+        return trainerStorage.getTrainerMap().values().stream().toList();
     }
 
     public void delete(String id) {

@@ -3,35 +3,35 @@
     "traineeId": "1",
     "trainerId": "6",
     "date": "2024-08-01",
-    "type": "Strength",
+    "type": "STRENGTH",
     "durationMinutes": 60
   },
   {
     "traineeId": "2",
     "trainerId": "7",
     "date": "2024-08-02",
-    "type": "Cardio",
+    "type": "CARDIO",
     "durationMinutes": 45
   },
   {
     "traineeId": "3",
     "trainerId": "8",
     "date": "2024-08-03",
-    "type": "Pilates Session",
+    "type": "PILATES",
     "durationMinutes": 50
   },
   {
     "traineeId": "4",
     "trainerId": "9",
     "date": "2024-08-04",
-    "type": "Yoga Morning",
+    "type": "WEIGHTLIFTING",
     "durationMinutes": 40
   },
   {
     "traineeId": "5",
     "trainerId": "10",
     "date": "2024-08-05",
-    "type": "CrossFit Challenge",
+    "type": "CROSSFIT",
     "durationMinutes": 70
   }
 ]

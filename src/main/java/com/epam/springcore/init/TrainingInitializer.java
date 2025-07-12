@@ -2,6 +2,7 @@ package com.epam.springcore.init;
 
 import com.epam.springcore.dao.TrainingDao;
 import com.epam.springcore.model.Training;
+import com.epam.springcore.model.enums.TrainingType;
 import com.epam.springcore.request.TrainingInitializeRequest;
 import com.epam.springcore.service.ITrainingService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -41,7 +42,7 @@ public class TrainingInitializer {
                 Training training = new Training(request.getTraineeId(),
                         request.getTrainerId(),
                         request.getDate(),
-                        request.getType(),
+                        TrainingType.valueOf(request.getType().toUpperCase()),
                         request.getDurationMinutes());
 
                 trainingDao.save(training);

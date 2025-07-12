@@ -28,7 +28,7 @@ public class TraineeDao {
     }
 
     public Collection<Trainee> findAll() {
-        return traineeStorage.getTraineeMap().values();
+        return traineeStorage.getTraineeMap().values().stream().toList();
     }
 
     public void delete(String id) {
