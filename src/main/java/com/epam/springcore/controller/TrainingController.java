@@ -35,7 +35,7 @@ public class TrainingController {
                     description = "Created",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = TrainingDto.class))))
-    @PostMapping("/trainings")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TrainingDto createTraining(@RequestBody @Valid CreateTrainingRequest request) {
         return trainingService.createTraining(request);
@@ -48,7 +48,7 @@ public class TrainingController {
                     description = "OK",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = TrainingDto.class))))
-    @GetMapping("/trainings/{id}")
+    @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public TrainingDto getTraining(@PathVariable String id) {
         return trainingService.getTraining(id);
@@ -61,7 +61,7 @@ public class TrainingController {
                     description = "OK",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = TrainingDto.class))))
-    @GetMapping("/trainings")
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<TrainingDto> getAllTrainings() {
         return trainingService.getAllTrainings();
@@ -74,7 +74,7 @@ public class TrainingController {
                     description = "OK",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = TrainingDto.class))))
-    @PutMapping("/trainings/{id}")
+    @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public TrainingDto updateTraining(@PathVariable String id, @RequestBody @Valid CreateTrainingRequest request) {
         return trainingService.updateTraining(id, request);
@@ -85,7 +85,7 @@ public class TrainingController {
             @ApiResponse(
                     responseCode = "204",
                     description = "No Content"))
-    @DeleteMapping("/trainings/{id}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTraining(@PathVariable String id) {
         trainingService.deleteTraining(id);
