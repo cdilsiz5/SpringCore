@@ -11,8 +11,6 @@ import com.epam.springcore.util.CredentialGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +47,7 @@ public class TraineeServiceImpl implements ITraineeService {
         Trainee trainee = traineeDao.findById(id);
         if (trainee == null) {
             log.warn("Trainee with ID {} not found", id);
-            return null;
+            throw  new RuntimeException("Trainee not found");
         }
         User user = userDao.findById(trainee.getUserId());
         return toDto(trainee, user);
@@ -107,11 +105,10 @@ public class TraineeServiceImpl implements ITraineeService {
     }
 
     private TraineeDto toDto(Trainee trainee, User user) {
-        TraineeDto dto = new TraineeDto("123", "ali", "yılmaz", LocalDate.of(2000, 1, 1), "istanbul");
+        TraineeDto dto = new TraineeDto();
         dto.setId(trainee.getUserId());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
-        dto.setUsername(user.getUsername());
         dto.setDateOfBirth(trainee.getDateOfBirth());
         dto.setAddress(trainee.getAddress());
         return dto;

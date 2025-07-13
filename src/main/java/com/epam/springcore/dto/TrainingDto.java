@@ -68,4 +68,16 @@ public class TrainingDto {
     public void setDurationMinutes(int durationMinutes) {
         this.durationMinutes = durationMinutes;
     }
+
+    @Override
+    public String toString() {
+        return "TrainingDto{" +
+                "id='" + id + '\'' +
+                ", traineeId='" + traineeId + '\'' +
+                ", trainerId='" + trainerId + '\'' +
+                ", date='" + date + '\'' +
+                ", type='" + type + '\'' +
+                ", durationMinutes=" + durationMinutes +
+                '}';
+    }
 }

@@ -1,44 +1,54 @@
 package com.epam.springcore;
 
-import com.epam.springcore.config.AppConfig;
-import org.apache.catalina.Context;
-import org.apache.catalina.startup.Tomcat;
-import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
-import org.springframework.web.servlet.DispatcherServlet;
+import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.dto.TrainerDto;
+import com.epam.springcore.dto.TrainingDto;
+import com.epam.springcore.facade.GymFacade;
+import com.epam.springcore.model.enums.TrainingType;
+import com.epam.springcore.request.CreateTraineeRequest;
+import com.epam.springcore.request.CreateTrainerRequest;
+import com.epam.springcore.request.CreateTrainingRequest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import java.io.File;
+import java.time.LocalDate;
 
 public class MainApp {
 
     public static void main(String[] args) throws Exception {
-        // 1. Tomcat başlat
-        Tomcat tomcat = new Tomcat();
-        tomcat.setPort(8080);
-        tomcat.setBaseDir("temp");
+        ApplicationContext context = new AnnotationConfigApplicationContext("com.epam.springcore");
 
-        // 2. Webapp dizini
-        File docBase = new File("src/main/webapp");
-        if (!docBase.exists()) {
-            docBase.mkdirs();
-        }
+        GymFacade gymFacade = context.getBean(GymFacade.class);
 
-        // 3. Tomcat context oluştur
-        Context tomcatContext = tomcat.addContext("", docBase.getAbsolutePath());
+        System.out.println("========== MAIN CLASS TEST ==========");
 
-        // 4. Spring WebApplicationContext oluştur
-        AnnotationConfigWebApplicationContext springContext = new AnnotationConfigWebApplicationContext();
-        springContext.setServletContext(tomcatContext.getServletContext()); // BU ŞART!
-        springContext.register(AppConfig.class);
-        springContext.refresh();
+        // Create a trainee
+        CreateTraineeRequest traineeRequest = new CreateTraineeRequest(
+                "Ali", "Yilmaz", LocalDate.of(2000, 5, 15), "Istanbul"
+        );
+        TraineeDto traineeDto = gymFacade.registerTrainee(traineeRequest);
+        System.out.println("Created Trainee: " + traineeDto);
 
-        // 5. DispatcherServlet ayarla
-        DispatcherServlet dispatcherServlet = new DispatcherServlet(springContext);
-        Tomcat.addServlet(tomcatContext, "dispatcher", dispatcherServlet).setLoadOnStartup(1);
-        tomcatContext.addServletMappingDecoded("/", "dispatcher");
+        // Create a trainer
+        CreateTrainerRequest trainerRequest = new CreateTrainerRequest(
+                "Ahmet", "Kaya", TrainingType.YOGA
+        );
+        TrainerDto trainerDto = gymFacade.registerTrainer(trainerRequest);
+        System.out.println("Created Trainer: " + trainerDto);
 
-        // 6. Tomcat başlat
-        tomcat.start();
-        System.out.println("Tomcat started at http://localhost:8080/");
-        tomcat.getServer().await();
+        // Schedule a training
+        CreateTrainingRequest trainingRequest = new CreateTrainingRequest(
+                traineeDto.getId(),
+                trainerDto.getId(),
+                "2025-08-01",
+                "YOGA",
+                45
+        );
+        TrainingDto trainingDto = gymFacade.scheduleTraining(trainingRequest);
+        System.out.println("Scheduled Training: " + trainingDto);
+
+        System.out.println("======================================");
+        System.out.println("All operations completed successfully.");
+        System.out.println("======================================");
     }
 }

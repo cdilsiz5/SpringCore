@@ -46,7 +46,8 @@ public class TrainerServiceImpl implements ITrainerService {
         Trainer trainer = trainerDao.findById(id);
         if (trainer == null) {
             log.warn("Trainer with ID {} not found", id);
-            return null;
+            throw  new RuntimeException("Trainer not found");
+
         }
 
         User user = userDao.findById(trainer.getUserId());

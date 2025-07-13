@@ -60,4 +60,15 @@ public class TrainerDto {
     public void setUsername(String username) {
         this.username = username;
     }
+
+    @Override
+    public String toString() {
+        return "TrainerDto{" +
+                "id='" + id + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", specialization='" + specialization + '\'' +
+                ", username='" + username + '\'' +
+                '}';
+    }
 }

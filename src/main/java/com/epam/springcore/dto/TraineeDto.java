@@ -10,8 +10,6 @@ public class TraineeDto {
     private String address;
     private String username;
 
-    public TraineeDto(String number, String ali, String yılmaz, LocalDate localDate, String istanbul) {
-    }
 
     public TraineeDto(String id, String firstName, String lastName, LocalDate dateOfBirth, String address, String username) {
         this.id = id;
@@ -21,6 +19,9 @@ public class TraineeDto {
         this.address = address;
         this.username = username;
 
+    }
+
+    public TraineeDto() {
     }
 
     public String getId() {
@@ -69,5 +70,17 @@ public class TraineeDto {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    @Override
+    public String toString() {
+        return "TraineeDto{" +
+                "id='" + id + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", dateOfBirth=" + dateOfBirth +
+                ", address='" + address + '\'' +
+                ", username='" + username + '\'' +
+                '}';
     }
 }

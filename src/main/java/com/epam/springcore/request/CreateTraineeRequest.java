@@ -18,7 +18,11 @@ public class CreateTraineeRequest {
     @NotBlank(message = "Address is required")
     private String address;
 
-    public CreateTraineeRequest(String ali, String yılmaz, LocalDate localDate, String istanbul) {
+    public CreateTraineeRequest(String firstName, String lastName, LocalDate dateOfBirth, String address) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.dateOfBirth = dateOfBirth;
+        this.address = address;
     }
 
     public CreateTraineeRequest() {
