@@ -15,17 +15,16 @@
     <junit.version>5.10.2</junit.version>
     <slf4j.version>2.0.13</slf4j.version>
   </properties>
+  <packaging>war</packaging>
+
 
   <dependencies>
-
-    <!-- Spring Context -->
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
       <version>${spring.version}</version>
     </dependency>
 
-    <!-- Validation -->
     <dependency>
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>
@@ -44,7 +43,6 @@
       <version>4.0.2</version>
     </dependency>
 
-    <!-- Jackson -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
@@ -125,6 +123,7 @@
   </dependencies>
 
   <build>
+    <finalName>springcore</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -138,6 +137,14 @@
           </compilerArgs>
         </configuration>
 
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>3.4.0</version>
+        <configuration>
+          <failOnMissingWebXml>false</failOnMissingWebXml>
+        </configuration>
       </plugin>
 
       <plugin>
