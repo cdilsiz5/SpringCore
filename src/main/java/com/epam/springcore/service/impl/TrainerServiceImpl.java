@@ -3,6 +3,7 @@ package com.epam.springcore.service.impl;
 import com.epam.springcore.dao.TrainerDao;
 import com.epam.springcore.dao.UserDao;
 import com.epam.springcore.dto.TrainerDto;
+import com.epam.springcore.exception.GymNotFoundException;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.User;
 import com.epam.springcore.request.CreateTrainerRequest;
@@ -46,7 +47,7 @@ public class TrainerServiceImpl implements ITrainerService {
         Trainer trainer = trainerDao.findById(id);
         if (trainer == null) {
             log.warn("Trainer with ID {} not found", id);
-            throw  new RuntimeException("Trainer not found");
+            throw  new GymNotFoundException("Trainer not found");
 
         }
 
@@ -100,7 +101,7 @@ public class TrainerServiceImpl implements ITrainerService {
         Trainer existingTrainer = trainerDao.findById(id);
         if (existingTrainer == null) {
             log.error("Trainer with ID {} not found", id);
-            throw new RuntimeException("Trainer with ID: " + id + " not found");
+            throw new GymNotFoundException("Trainer with ID: " + id + " not found");
         }
         return existingTrainer;
     }

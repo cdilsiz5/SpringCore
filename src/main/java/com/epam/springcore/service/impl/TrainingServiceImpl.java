@@ -3,6 +3,7 @@ package com.epam.springcore.service.impl;
 import com.epam.springcore.dao.TrainingDao;
 import com.epam.springcore.dao.UserDao;
 import com.epam.springcore.dto.TrainingDto;
+import com.epam.springcore.exception.GymNotFoundException;
 import com.epam.springcore.model.Training;
 import com.epam.springcore.model.User;
 import com.epam.springcore.model.enums.TrainingType;
@@ -52,7 +53,7 @@ public class TrainingServiceImpl implements ITrainingService {
         Training training = trainingDao.findById(id);
         if (training == null) {
             log.warn("Training with ID {} not found", id);
-            return null;
+            throw  new GymNotFoundException("Training not found");
         }
         return toDto(training);
     }
@@ -96,7 +97,7 @@ public class TrainingServiceImpl implements ITrainingService {
         Training existingTraining = trainingDao.findById(id);
         if (existingTraining == null) {
             log.error("Training with ID {} not found", id);
-            throw new RuntimeException("Training with ID: " + id + " not found");
+            throw new GymNotFoundException("Training with ID: " + id + " not found");
         }
         return existingTraining;
     }

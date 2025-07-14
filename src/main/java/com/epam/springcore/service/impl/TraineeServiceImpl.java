@@ -3,6 +3,7 @@ package com.epam.springcore.service.impl;
 import com.epam.springcore.dao.TraineeDao;
 import com.epam.springcore.dao.UserDao;
 import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.exception.GymNotFoundException;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.User;
 import com.epam.springcore.request.CreateTraineeRequest;
@@ -11,6 +12,7 @@ import com.epam.springcore.util.CredentialGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +49,7 @@ public class TraineeServiceImpl implements ITraineeService {
         Trainee trainee = traineeDao.findById(id);
         if (trainee == null) {
             log.warn("Trainee with ID {} not found", id);
-            throw  new RuntimeException("Trainee not found");
+            throw  new GymNotFoundException("Trainee not found");
         }
         User user = userDao.findById(trainee.getUserId());
         return toDto(trainee, user);
@@ -99,7 +101,7 @@ public class TraineeServiceImpl implements ITraineeService {
         Trainee existingTrainee = traineeDao.findById(id);
         if (existingTrainee == null) {
             log.error("Trainee with ID {} not found", id);
-            throw new RuntimeException("Trainee with ID: " + id + " not found");
+            throw new GymNotFoundException("Trainee with ID: " + id + " not found");
         }
         return existingTrainee;
     }

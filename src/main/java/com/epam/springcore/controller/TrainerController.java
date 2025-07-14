@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +24,7 @@ import static com.epam.springcore.constants.Constant.*;
 public class TrainerController {
 
     private final ITrainerService trainerService;
-
+    @Autowired
     public TrainerController(ITrainerService trainerService) {
         this.trainerService = trainerService;
     }
@@ -35,7 +36,7 @@ public class TrainerController {
                     description = "Created",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = TrainerDto.class))))
-    @PostMapping("/trainers")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TrainerDto createTrainer(@RequestBody @Valid CreateTrainerRequest request) {
         return trainerService.createTrainer(request);
@@ -48,7 +49,7 @@ public class TrainerController {
                     description = "OK",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = TrainerDto.class))))
-    @GetMapping("/trainers/{id}")
+    @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public TrainerDto getTrainer(@PathVariable String id) {
         return trainerService.getTrainer(id);
@@ -61,7 +62,7 @@ public class TrainerController {
                     description = "OK",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = TrainerDto.class))))
-    @GetMapping("/trainers")
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<TrainerDto> getAllTrainers() {
         return trainerService.getAllTrainers();
@@ -74,7 +75,7 @@ public class TrainerController {
                     description = "OK",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = TrainerDto.class))))
-    @PutMapping("/trainers/{id}")
+    @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public TrainerDto updateTrainer(@PathVariable String id, @RequestBody @Valid CreateTrainerRequest request) {
         return trainerService.updateTrainer(id, request);
@@ -85,7 +86,7 @@ public class TrainerController {
             @ApiResponse(
                     responseCode = "204",
                     description = "No Content"))
-    @DeleteMapping("/trainers/{id}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTrainer(@PathVariable String id) {
         trainerService.deleteTrainer(id);
