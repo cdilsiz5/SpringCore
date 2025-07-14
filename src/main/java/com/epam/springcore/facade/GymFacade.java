@@ -4,15 +4,14 @@ package com.epam.springcore.facade;
 import com.epam.springcore.dto.TraineeDto;
 import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
-import com.epam.springcore.request.CreateTraineeRequest;
-import com.epam.springcore.request.CreateTrainerRequest;
-import com.epam.springcore.request.CreateTrainingRequest;
+import com.epam.springcore.request.create.CreateTraineeRequest;
+import com.epam.springcore.request.create.CreateTrainerRequest;
+import com.epam.springcore.request.create.CreateTrainingRequest;
 import com.epam.springcore.service.ITraineeService;
 import com.epam.springcore.service.ITrainerService;
 import com.epam.springcore.service.ITrainingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 
 @Component

@@ -1,4 +1,4 @@
-package com.epam.springcore.request;
+package com.epam.springcore.request.init;
 
 import java.time.LocalDate;
 
@@ -13,7 +13,12 @@ public class TraineeInitializeRequest {
     public TraineeInitializeRequest() {
     }
 
-    public TraineeInitializeRequest(String ali, String yılmaz, String date, String ankara) {}
+    public TraineeInitializeRequest( String firstName, String lastName, LocalDate dateOfBirth, String address) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.dateOfBirth = dateOfBirth;
+        this.address = address;
+    }
 
     public String getId() {
         return id;

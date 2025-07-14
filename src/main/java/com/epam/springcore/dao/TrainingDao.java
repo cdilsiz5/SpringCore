@@ -1,12 +1,9 @@
 package com.epam.springcore.dao;
 
-import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Training;
 import com.epam.springcore.storage.TrainingStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
-import java.util.Collection;
 import java.util.List;
 
 @Repository

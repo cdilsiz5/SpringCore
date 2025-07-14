@@ -5,10 +5,9 @@ import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.facade.GymFacade;
 import com.epam.springcore.model.enums.TrainingType;
-import com.epam.springcore.request.CreateTraineeRequest;
-import com.epam.springcore.request.CreateTrainerRequest;
-import com.epam.springcore.request.CreateTrainingRequest;
-import org.springframework.context.ApplicationContext;
+import com.epam.springcore.request.create.CreateTraineeRequest;
+import com.epam.springcore.request.create.CreateTrainerRequest;
+import com.epam.springcore.request.create.CreateTrainingRequest;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.time.LocalDate;
@@ -16,7 +15,7 @@ import java.time.LocalDate;
 public class MainApp {
 
     public static void main(String[] args) throws Exception {
-        ApplicationContext context = new AnnotationConfigApplicationContext("com.epam.springcore");
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext("com.epam.springcore");
 
         GymFacade gymFacade = context.getBean(GymFacade.class);
 
@@ -50,5 +49,6 @@ public class MainApp {
         System.out.println("======================================");
         System.out.println("All operations completed successfully.");
         System.out.println("======================================");
+        context.close();
     }
 }

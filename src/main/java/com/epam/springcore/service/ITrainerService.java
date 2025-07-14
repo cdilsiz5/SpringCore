@@ -1,9 +1,8 @@
 package com.epam.springcore.service;
 
 import com.epam.springcore.dto.TrainerDto;
-import com.epam.springcore.request.CreateTrainerRequest;
+import com.epam.springcore.request.create.CreateTrainerRequest;
 
-import java.util.Collection;
 import java.util.List;
 
 /**

@@ -1,4 +1,4 @@
-package com.epam.springcore.request;
+package com.epam.springcore.request.init;
 
 public class TrainingInitializeRequest {
 
@@ -10,6 +10,14 @@ public class TrainingInitializeRequest {
 
 
     public TrainingInitializeRequest() {}
+
+    public TrainingInitializeRequest(String traineeId, String trainerId, String date, String type, int durationMinutes) {
+        this.traineeId = traineeId;
+        this.trainerId = trainerId;
+        this.date = date;
+        this.type = type;
+        this.durationMinutes = durationMinutes;
+    }
 
     public String getTraineeId() {
         return traineeId;

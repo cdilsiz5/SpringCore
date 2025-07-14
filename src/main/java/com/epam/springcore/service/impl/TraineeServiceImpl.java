@@ -6,7 +6,7 @@ import com.epam.springcore.dto.TraineeDto;
 import com.epam.springcore.exception.GymNotFoundException;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.User;
-import com.epam.springcore.request.CreateTraineeRequest;
+import com.epam.springcore.request.create.CreateTraineeRequest;
 import com.epam.springcore.service.ITraineeService;
 import com.epam.springcore.util.CredentialGenerator;
 import org.slf4j.Logger;

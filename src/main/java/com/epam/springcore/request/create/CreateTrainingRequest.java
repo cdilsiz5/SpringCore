@@ -1,4 +1,4 @@
-package com.epam.springcore.request;
+package com.epam.springcore.request.create;
 import jakarta.validation.constraints.*;
 
 public class CreateTrainingRequest {

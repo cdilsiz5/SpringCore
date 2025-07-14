@@ -1,8 +1,6 @@
 package com.epam.springcore.dto;
 
 
-
-
 public class TrainerDto {
     private String id;
     private String firstName;

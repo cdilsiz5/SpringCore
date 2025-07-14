@@ -1,9 +1,9 @@
 package com.epam.springcore.init;
 
+import com.epam.springcore.dao.TrainerDao;
 import com.epam.springcore.dao.UserDao;
 import com.epam.springcore.model.enums.TrainingType;
-import com.epam.springcore.request.TrainerInitializeRequest;
-import com.epam.springcore.service.ITrainerService;
+import com.epam.springcore.request.init.TrainerInitializeRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,10 +11,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentMatchers;
 import org.springframework.core.io.Resource;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +26,7 @@ import static org.mockito.MockitoAnnotations.openMocks;
 public class TrainerInitializerTest {
 
     @Mock
-    private ITrainerService trainerService;
+    private TrainerDao trainerDao;
 
     @Mock
     private UserDao userDao;
@@ -53,41 +53,57 @@ public class TrainerInitializerTest {
         field.setAccessible(true);
         field.set(trainerInitializer, trainerDataFile);
 
-        when(trainerService.getAllTrainers()).thenReturn(List.of());
+        when(trainerDao.findAll()).thenReturn(List.of());
     }
 
     @Test
-    @DisplayName("Negative - JSON parsing throws exception")
-    void testInit_WhenJsonParseFails_ShouldNotCallServices() throws Exception {
-        when(objectMapper.readValue(any(InputStream.class), any(TypeReference.class)))
-                .thenThrow(new IOException("Failed to parse"));
+    @DisplayName(" Success - JSON parsed and trainers initialized")
+    void testInit_Success_ShouldCallDaoMethods() throws Exception {
+        List<TrainerInitializeRequest> mockList = List.of(
+                new TrainerInitializeRequest("Ahmet", "Kaya", TrainingType.CROSSFIT),
+                new TrainerInitializeRequest("Cihan", "Dilsiz", TrainingType.BOXING)
+        );
+
+        when(objectMapper.readValue(any(InputStream.class), ArgumentMatchers.<TypeReference<List<TrainerInitializeRequest>>>any()))
+                .thenReturn(mockList);
+
+        trainerInitializer.init();
+        verify(userDao, times(2)).save(any());
+        verify(trainerDao, times(2)).save(any());
+    }
+
+    @Test
+    @DisplayName(" JSON parsing throws exception")
+    void testInit_WhenJsonParseFails_ShouldNotCallDaos() throws Exception {
+        when(objectMapper.readValue(any(InputStream.class), ArgumentMatchers.<TypeReference<List<TrainerInitializeRequest>>>any()))
+                .thenThrow(new RuntimeException("Failed to parse"));
 
         trainerInitializer.init();
 
         verify(userDao, never()).save(any());
-        verify(trainerService, never()).createTrainer(any());
+        verify(trainerDao, never()).save(any());
     }
 
     @Test
-    @DisplayName("Negative - InputStream throws IOException")
-    void testInit_WhenInputStreamFails_ShouldNotCallServices() throws Exception {
-        when(trainerDataFile.getInputStream()).thenThrow(new IOException("Can't read file"));
+    @DisplayName(" InputStream throws exception")
+    void testInit_WhenInputStreamFails_ShouldNotCallDaos() throws Exception {
+        when(trainerDataFile.getInputStream()).thenThrow(new RuntimeException("I/O Error"));
 
         trainerInitializer.init();
 
         verify(userDao, never()).save(any());
-        verify(trainerService, never()).createTrainer(any());
+        verify(trainerDao, never()).save(any());
     }
 
     @Test
-    @DisplayName("Edge Case - Empty trainer list in JSON")
-    void testInit_WhenJsonListIsEmpty_ShouldNotCallServices() throws Exception {
-        when(objectMapper.readValue(any(InputStream.class), any(TypeReference.class)))
+    @DisplayName(" Empty list - Should not call save")
+    void testInit_WhenJsonListEmpty_ShouldNotCallDaos() throws Exception {
+        when(objectMapper.readValue(any(InputStream.class), ArgumentMatchers.<TypeReference<List<TrainerInitializeRequest>>>any()))
                 .thenReturn(List.of());
 
         trainerInitializer.init();
 
         verify(userDao, never()).save(any());
-        verify(trainerService, never()).createTrainer(any());
+        verify(trainerDao, never()).save(any());
     }
 }

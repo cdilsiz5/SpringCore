@@ -4,7 +4,11 @@ package com.epam.springcore.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class ApiException extends RuntimeException{
+import java.io.Serializable;
+
+public class ApiException extends RuntimeException implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private HttpStatus httpStatus;
     public ApiException(String message, HttpStatus httpStatus) {
         super(message);

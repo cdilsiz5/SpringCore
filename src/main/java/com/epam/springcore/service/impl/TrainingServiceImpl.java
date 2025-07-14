@@ -7,7 +7,7 @@ import com.epam.springcore.exception.GymNotFoundException;
 import com.epam.springcore.model.Training;
 import com.epam.springcore.model.User;
 import com.epam.springcore.model.enums.TrainingType;
-import com.epam.springcore.request.CreateTrainingRequest;
+import com.epam.springcore.request.create.CreateTrainingRequest;
 import com.epam.springcore.service.ITrainingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

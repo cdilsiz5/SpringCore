@@ -1,4 +1,4 @@
-package com.epam.springcore.request;
+package com.epam.springcore.request.init;
 
 
 import com.epam.springcore.model.enums.TrainingType;

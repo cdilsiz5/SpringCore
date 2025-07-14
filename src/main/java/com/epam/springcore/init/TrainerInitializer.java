@@ -4,8 +4,7 @@ import com.epam.springcore.dao.TrainerDao;
 import com.epam.springcore.dao.UserDao;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.User;
-import com.epam.springcore.request.TrainerInitializeRequest;
-import com.epam.springcore.service.ITrainerService;
+import com.epam.springcore.request.init.TrainerInitializeRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 
 @Component

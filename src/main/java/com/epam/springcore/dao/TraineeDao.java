@@ -1,6 +1,4 @@
 package com.epam.springcore.dao;
-
-import com.epam.springcore.dto.TraineeDto;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.storage.TraineeStorage;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -6,7 +6,7 @@ import com.epam.springcore.dto.TraineeDto;
 import com.epam.springcore.exception.GymNotFoundException;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.User;
-import com.epam.springcore.request.CreateTraineeRequest;
+import com.epam.springcore.request.create.CreateTraineeRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,7 @@
 package com.epam.springcore.controller;
 
 import com.epam.springcore.dto.TrainerDto;
-import com.epam.springcore.request.CreateTrainerRequest;
+import com.epam.springcore.request.create.CreateTrainerRequest;
 import com.epam.springcore.service.ITrainerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
