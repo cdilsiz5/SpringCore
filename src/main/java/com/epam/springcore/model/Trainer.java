@@ -1,38 +1,36 @@
 package com.epam.springcore.model;
 
-import com.epam.springcore.model.enums.TrainingType;
+import com.epam.springcore.model.enums.Specialization;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+
+@Data
+@Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Table(name = "trainers")
+@SuperBuilder
 public class Trainer {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private TrainingType specialization;
+    @Enumerated(EnumType.STRING)
+    private Specialization specialization;
     private String userId;
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    public Trainer(TrainingType specialization, String userId) {
-        this.specialization = specialization;
-        this.userId = userId;
-    }
+    @ManyToMany(mappedBy = "trainers")
+    private List<Trainee> trainees;
 
-    public TrainingType getSpecialization() {
-        return specialization;
-    }
+    @OneToMany(mappedBy = "trainer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Training> trainings;
 
-    public void setSpecialization(TrainingType specialization) {
-        this.specialization = specialization;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    @Override
-    public String toString() {
-        return "Trainer{" +
-                "specialization=" + specialization +
-                ", userId='" + userId + '\'' +
-                '}';
-    }
 }

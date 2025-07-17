@@ -1,7 +1,5 @@
 package com.epam.springcore.exception.handler;
 
-
-
 import com.epam.springcore.exception.ApiException;
 import com.epam.springcore.exception.ValidationException;
 import com.epam.springcore.response.ErrorResponse;
@@ -17,15 +15,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
-
 public class GlobalExceptionHandler {
+
     @ExceptionHandler(ApiException.class)
-    public ResponseEntity<ErrorResponse> handleNotFoundException(ApiException exception) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage(exception.getMessage());
-        errorResponse.setExceptionType(exception.getClass().getSimpleName());
-        errorResponse.setStatusCode(exception.getHttpStatus().value());
-        errorResponse.setErrorTime(LocalDateTime.now());
+    public ResponseEntity<ErrorResponse> handleApiException(ApiException exception) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .message(exception.getMessage())
+                .exceptionType(exception.getClass().getSimpleName())
+                .statusCode(exception.getHttpStatus().value())
+                .errorTime(LocalDateTime.now())
+                .build();
+
         return ResponseEntity.status(exception.getHttpStatus()).body(errorResponse);
     }
 
@@ -35,12 +35,13 @@ public class GlobalExceptionHandler {
         for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
             validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        ValidationException errorResponse = new ValidationException();
-        errorResponse.setExceptionType(exception.getClass().getSimpleName());
-        errorResponse.setValidationErrors(validationErrors);
-        errorResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
-        errorResponse.setErrorTime(LocalDateTime.now());
+        ValidationException errorResponse = ValidationException.builder()
+                .exceptionType(exception.getClass().getSimpleName())
+                .validationErrors(validationErrors)
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .errorTime(LocalDateTime.now())
+                .build();
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
-
 }

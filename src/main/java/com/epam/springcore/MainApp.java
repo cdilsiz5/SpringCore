@@ -4,10 +4,10 @@ import com.epam.springcore.dto.TraineeDto;
 import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.facade.GymFacade;
-import com.epam.springcore.model.enums.TrainingType;
-import com.epam.springcore.request.create.CreateTraineeRequest;
-import com.epam.springcore.request.create.CreateTrainerRequest;
-import com.epam.springcore.request.create.CreateTrainingRequest;
+import com.epam.springcore.model.enums.Specialization;
+import com.epam.springcore.request.trainee.CreateTraineeRequest;
+import com.epam.springcore.request.trainer.CreateTrainerRequest;
+import com.epam.springcore.request.training.CreateTrainingRequest;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.time.LocalDate;
@@ -30,7 +30,7 @@ public class MainApp {
 
         // Create a trainer
         CreateTrainerRequest trainerRequest = new CreateTrainerRequest(
-                "Ahmet", "Kaya", TrainingType.YOGA
+                "Ahmet", "Kaya", Specialization.YOGA
         );
         TrainerDto trainerDto = gymFacade.registerTrainer(trainerRequest);
         System.out.println("Created Trainer: " + trainerDto);

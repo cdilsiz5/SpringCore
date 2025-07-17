@@ -1,13 +1,13 @@
 package com.epam.springcore.service.impl;
 
-import com.epam.springcore.dao.TrainerDao;
-import com.epam.springcore.dao.UserDao;
+import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.repository.TrainerRepository;
+import com.epam.springcore.repository.UserRepository;
 import com.epam.springcore.dto.TrainerDto;
-import com.epam.springcore.exception.GymNotFoundException;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.User;
-import com.epam.springcore.model.enums.TrainingType;
-import com.epam.springcore.request.create.CreateTrainerRequest;
+import com.epam.springcore.model.enums.Specialization;
+import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,10 +23,10 @@ import static org.mockito.Mockito.*;
 class TrainerServiceImplTest {
 
     @Mock
-    private TrainerDao trainerDao;
+    private TrainerRepository trainerDao;
 
     @Mock
-    private UserDao userDao;
+    private UserRepository userRepository;
 
     @InjectMocks
     private TrainerServiceImpl trainerService;
@@ -39,18 +39,18 @@ class TrainerServiceImplTest {
     @Test
     @DisplayName("Should create a new trainer and call save methods")
     void shouldCallCreateMethods() {
-        CreateTrainerRequest request = new CreateTrainerRequest("ali", "yılmaz", TrainingType.CROSSFIT);
+        CreateTrainerRequest request = new CreateTrainerRequest("ali", "yılmaz", Specialization.CROSSFIT);
         User user = new User("ali", "yılmaz", Collections.emptyList());
-        Trainer trainer = new Trainer(TrainingType.CROSSFIT, user.getId());
+        Trainer trainer = new Trainer(Specialization.CROSSFIT, user.getId());
 
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
-        doNothing().when(userDao).save(any(User.class));
+        doNothing().when(userRepository).save(any(User.class));
         when(trainerDao.save(any(Trainer.class))).thenReturn(trainer);
-        when(userDao.findById(user.getId())).thenReturn(user);
+        when(userRepository.findById(user.getId())).thenReturn(user);
 
         trainerService.createTrainer(request);
 
-        verify(userDao).save(any(User.class));
+        verify(userRepository).save(any(User.class));
         verify(trainerDao).save(any(Trainer.class));
     }
 
@@ -58,11 +58,11 @@ class TrainerServiceImplTest {
     @DisplayName("Should return trainer DTO when ID is found")
     void shouldReturnTrainerById() {
         String trainerId = "1";
-        Trainer trainer = new Trainer(TrainingType.YOGA, "5");
+        Trainer trainer = new Trainer(Specialization.YOGA, "5");
         User user = new User("mehmet", "arslan", Collections.emptyList());
 
         when(trainerDao.findById(trainerId)).thenReturn(trainer);
-        when(userDao.findById("5")).thenReturn(user);
+        when(userRepository.findById("5")).thenReturn(user);
 
         TrainerDto result = trainerService.getTrainer(trainerId);
 
@@ -72,21 +72,21 @@ class TrainerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should throw GymNotFoundException when trainer ID not found")
+    @DisplayName("Should throw NotFoundException when trainer ID not found")
     void shouldThrowWhenTrainerNotFound() {
         when(trainerDao.findById("1")).thenReturn(null);
 
-        assertThrows(GymNotFoundException.class, () -> trainerService.getTrainer("1"));
+        assertThrows(NotFoundException.class, () -> trainerService.getTrainer("1"));
     }
 
     @Test
     @DisplayName("Should return all trainers as DTO list")
     void shouldReturnAllTrainers() {
-        Trainer trainer = new Trainer(TrainingType.STRENGTH, "10");
+        Trainer trainer = new Trainer(Specialization.STRENGTH, "10");
         User user = new User("veli", "kar", Collections.emptyList());
 
         when(trainerDao.findAll()).thenReturn(List.of(trainer));
-        when(userDao.findById("10")).thenReturn(user);
+        when(userRepository.findById("10")).thenReturn(user);
 
         List<TrainerDto> result = trainerService.getAllTrainers();
 
@@ -100,8 +100,8 @@ class TrainerServiceImplTest {
     void shouldCallUpdateMethods() {
         String trainerId = "1";
         String userId = "99";
-        CreateTrainerRequest request = new CreateTrainerRequest("ahmet", "kaya", TrainingType.YOGA);
-        Trainer existingTrainer = new Trainer(TrainingType.CROSSFIT, userId);
+        CreateTrainerRequest request = new CreateTrainerRequest("ahmet", "kaya", Specialization.YOGA);
+        Trainer existingTrainer = new Trainer(Specialization.CROSSFIT, userId);
         User existingUser = new User("old", "user", Collections.emptyList());
         existingUser.setId(userId);
         existingUser.setFirstName("ahmet");
@@ -109,21 +109,21 @@ class TrainerServiceImplTest {
         existingUser.setUsername("ahmet.kaya");
 
         when(trainerDao.findById(trainerId)).thenReturn(existingTrainer);
-        when(userDao.findById(userId)).thenReturn(existingUser);
-        doNothing().when(userDao).save(any(User.class));
+        when(userRepository.findById(userId)).thenReturn(existingUser);
+        doNothing().when(userRepository).save(any(User.class));
         when(trainerDao.save(existingTrainer)).thenReturn(existingTrainer);
-        when(userDao.findById(userId)).thenReturn(existingUser);
+        when(userRepository.findById(userId)).thenReturn(existingUser);
 
         trainerService.updateTrainer(trainerId, request);
 
-        verify(userDao).save(any(User.class));
+        verify(userRepository).save(any(User.class));
         verify(trainerDao).save(any(Trainer.class));
     }
 
     @Test
     @DisplayName("Should delete trainer successfully")
     void shouldDeleteTrainer() {
-        Trainer trainer = new Trainer(TrainingType.YOGA, "user-1");
+        Trainer trainer = new Trainer(Specialization.YOGA, "user-1");
         when(trainerDao.findById("1")).thenReturn(trainer);
 
         assertDoesNotThrow(() -> trainerService.deleteTrainer("1"));
@@ -135,6 +135,6 @@ class TrainerServiceImplTest {
     void shouldThrowWhenDeletingNonExistingTrainer() {
         when(trainerDao.findById("2")).thenReturn(null);
 
-        assertThrows(GymNotFoundException.class, () -> trainerService.deleteTrainer("2"));
+        assertThrows(NotFoundException.class, () -> trainerService.deleteTrainer("2"));
     }
 }

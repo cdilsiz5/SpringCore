@@ -1,13 +1,13 @@
 package com.epam.springcore.service.impl;
 
-import com.epam.springcore.dao.TrainingDao;
-import com.epam.springcore.dao.UserDao;
+import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.repository.TrainingRepository;
+import com.epam.springcore.repository.UserRepository;
 import com.epam.springcore.dto.TrainingDto;
-import com.epam.springcore.exception.GymNotFoundException;
 import com.epam.springcore.model.Training;
 import com.epam.springcore.model.User;
-import com.epam.springcore.model.enums.TrainingType;
-import com.epam.springcore.request.create.CreateTrainingRequest;
+import com.epam.springcore.model.enums.Specialization;
+import com.epam.springcore.request.training.CreateTrainingRequest;
 import com.epam.springcore.service.ITrainingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,12 +21,12 @@ public class TrainingServiceImpl implements ITrainingService {
 
     private static final Logger log = LoggerFactory.getLogger(TrainingServiceImpl.class);
 
-    private final TrainingDao trainingDao;
-    private final UserDao userDao;
+    private final TrainingRepository trainingRepository;
+    private final UserRepository userRepository;
 
-    public TrainingServiceImpl(TrainingDao trainingDao, UserDao userDao) {
-        this.trainingDao = trainingDao;
-        this.userDao = userDao;
+    public TrainingServiceImpl(TrainingRepository trainingRepository, UserRepository userRepository) {
+        this.trainingRepository = trainingRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -38,10 +38,10 @@ public class TrainingServiceImpl implements ITrainingService {
                 request.getTraineeId(),
                 request.getTrainerId(),
                 request.getDate(),
-                TrainingType.valueOf(request.getType().toUpperCase()),
+                Specialization.valueOf(request.getType().toUpperCase()),
                 request.getDurationMinutes()
         );
-        Training saved = trainingDao.save(training);
+        Training saved = trainingRepository.save(training);
 
         log.debug("Training saved with id={}", saved.getId());
         return toDto(saved);
@@ -50,10 +50,10 @@ public class TrainingServiceImpl implements ITrainingService {
     @Override
     public TrainingDto getTraining(String id) {
         log.info("Fetching training with ID: {}", id);
-        Training training = trainingDao.findById(id);
+        Training training = trainingRepository.findById(id);
         if (training == null) {
             log.warn("Training with ID {} not found", id);
-            throw  new GymNotFoundException("Training not found");
+            throw  new NotFoundException("Training not found");
         }
         return toDto(training);
     }
@@ -61,7 +61,7 @@ public class TrainingServiceImpl implements ITrainingService {
     @Override
     public List<TrainingDto> getAllTrainings() {
         log.info("Fetching all trainings");
-        List<Training> trainings = (List<Training>) trainingDao.findAll();
+        List<Training> trainings = (List<Training>) trainingRepository.findAll();
         List<TrainingDto> dtos = new ArrayList<>();
         for (Training training : trainings) {
             dtos.add(toDto(training));
@@ -77,10 +77,10 @@ public class TrainingServiceImpl implements ITrainingService {
         existingTraining.setTraineeId(request.getTraineeId());
         existingTraining.setTrainerId(request.getTrainerId());
         existingTraining.setDate(request.getDate());
-        existingTraining.setType(TrainingType.valueOf(request.getType().toUpperCase()));
+        existingTraining.setType(Specialization.valueOf(request.getType().toUpperCase()));
         existingTraining.setDurationMinutes(request.getDurationMinutes());
 
-        Training updated = trainingDao.save(existingTraining);
+        Training updated = trainingRepository.save(existingTraining);
         log.debug("Training with ID {} updated", id);
         return toDto(updated);
     }
@@ -89,22 +89,22 @@ public class TrainingServiceImpl implements ITrainingService {
     public void deleteTraining(String id) {
         log.info("Deleting training with ID: {}", id);
         checkTrainingExist(id);
-        trainingDao.delete(id);
+        trainingRepository.delete(id);
         log.debug("Training with ID {} deleted", id);
     }
 
     private Training checkTrainingExist(String id) {
-        Training existingTraining = trainingDao.findById(id);
+        Training existingTraining = trainingRepository.findById(id);
         if (existingTraining == null) {
             log.error("Training with ID {} not found", id);
-            throw new GymNotFoundException("Training with ID: " + id + " not found");
+            throw new NotFoundException("Training with ID: " + id + " not found");
         }
         return existingTraining;
     }
 
     private TrainingDto toDto(Training training) {
-        User trainer = userDao.findById(training.getTrainerId());
-        User trainee = userDao.findById(training.getTraineeId());
+        User trainer = userRepository.findById(training.getTrainerId());
+        User trainee = userRepository.findById(training.getTraineeId());
 
         TrainingDto dto = new TrainingDto();
         dto.setId(training.getId());

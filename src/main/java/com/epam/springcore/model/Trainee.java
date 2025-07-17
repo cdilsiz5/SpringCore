@@ -1,52 +1,40 @@
 package com.epam.springcore.model;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 
+@Data
+@Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Table(name = "trainees")
+@SuperBuilder
 public class Trainee {
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private LocalDate dateOfBirth;
     private String address;
     private String userId;
 
-    public Trainee() {
-    }
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    public Trainee(LocalDate dateOfBirth, String address, String userId) {
-        this.dateOfBirth = dateOfBirth;
-        this.address = address;
-        this.userId = userId;
-    }
+    @ManyToMany
+    @JoinTable(name = "trainee_trainer",
+            joinColumns = @JoinColumn(name = "trainee_id"),
+            inverseJoinColumns = @JoinColumn(name = "trainer_id"))
+    private Set<Trainer> trainers;
 
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
+    @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Training> trainings;
 
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    @Override
-    public String toString() {
-        return "Trainee{" +
-                "dateOfBirth=" + dateOfBirth +
-                ", address='" + address + '\'' +
-                ", userId='" + userId + '\'' +
-                '}';
-    }
 }

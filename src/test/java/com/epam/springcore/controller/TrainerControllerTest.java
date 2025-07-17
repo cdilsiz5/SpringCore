@@ -1,10 +1,10 @@
 package com.epam.springcore.controller;
 
 import com.epam.springcore.dto.TrainerDto;
-import com.epam.springcore.exception.GymNotFoundException;
+import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
-import com.epam.springcore.model.enums.TrainingType;
-import com.epam.springcore.request.create.CreateTrainerRequest;
+import com.epam.springcore.model.enums.Specialization;
+import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.service.ITrainerService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +52,7 @@ public class TrainerControllerTest {
         request = new CreateTrainerRequest();
         request.setFirstName("Cihan");
         request.setLastName("Dilsiz");
-        request.setSpecialty(TrainingType.YOGA);
+        request.setSpecialty(Specialization.YOGA);
 
         mockTrainer = new TrainerDto();
         mockTrainer.setId("1");
@@ -121,7 +121,7 @@ public class TrainerControllerTest {
     @DisplayName("GET /trainer/{id} - Negative: not found should return 404")
     void testGetTrainerById_NotFound() throws Exception {
         when(trainerService.getTrainer("999"))
-                .thenThrow(new GymNotFoundException("Trainer not found"));
+                .thenThrow(new NotFoundException("Trainer not found"));
 
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new TrainerController(trainerService))
@@ -132,14 +132,14 @@ public class TrainerControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Trainer not found"))
                 .andExpect(jsonPath("$.statusCode").value(404))
-                .andExpect(jsonPath("$.exceptionType").value("GymNotFoundException"));
+                .andExpect(jsonPath("$.exceptionType").value("NotFoundException"));
     }
 
 
     @Test
     @DisplayName("DELETE /trainer/{id} - Negative: not found should return 404")
     void testDeleteTrainer_NotFound() throws Exception {
-        doThrow(new GymNotFoundException("Trainer not found"))
+        doThrow(new NotFoundException("Trainer not found"))
                 .when(trainerService).deleteTrainer("999");
 
         mockMvc = MockMvcBuilders
@@ -151,7 +151,7 @@ public class TrainerControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Trainer not found"))
                 .andExpect(jsonPath("$.statusCode").value(404))
-                .andExpect(jsonPath("$.exceptionType").value("GymNotFoundException"));
+                .andExpect(jsonPath("$.exceptionType").value("NotFoundException"));
     }
 
 
@@ -161,10 +161,10 @@ public class TrainerControllerTest {
         CreateTrainerRequest request = new CreateTrainerRequest();
         request.setFirstName("Ali");
         request.setLastName("Yılmaz");
-        request.setSpecialty(TrainingType.YOGA);
+        request.setSpecialty(Specialization.YOGA);
 
         when(trainerService.updateTrainer(eq("999"), any(CreateTrainerRequest.class)))
-                .thenThrow(new GymNotFoundException("Trainer not found"));
+                .thenThrow(new NotFoundException("Trainer not found"));
 
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new TrainerController(trainerService))
@@ -177,7 +177,7 @@ public class TrainerControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Trainer not found"))
                 .andExpect(jsonPath("$.statusCode").value(404))
-                .andExpect(jsonPath("$.exceptionType").value("GymNotFoundException"));
+                .andExpect(jsonPath("$.exceptionType").value("NotFoundException"));
     }
 
     @Test

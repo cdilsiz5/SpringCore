@@ -1,9 +1,9 @@
 package com.epam.springcore.controller;
 
 import com.epam.springcore.dto.TraineeDto;
-import com.epam.springcore.exception.GymNotFoundException;
+import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
-import com.epam.springcore.request.create.CreateTraineeRequest;
+import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.service.ITraineeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -125,7 +125,7 @@ public class TraineeControllerTest {
     @DisplayName("GET /trainee/{id} - Negative: trainee not found should return 404")
     void testGetTraineeById_NotFound() throws Exception {
         when(traineeService.getTrainee("404"))
-                .thenThrow(new GymNotFoundException("Trainee not found"));
+                .thenThrow(new NotFoundException("Trainee not found"));
 
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new TraineeController(traineeService))
@@ -136,14 +136,14 @@ public class TraineeControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Trainee not found"))
                 .andExpect(jsonPath("$.statusCode").value(404))
-                .andExpect(jsonPath("$.exceptionType").value("GymNotFoundException"));
+                .andExpect(jsonPath("$.exceptionType").value("NotFoundException"));
     }
 
 
     @Test
     @DisplayName("DELETE /trainee/{id} - Negative: trainee not found should return 404")
     void testDeleteTrainee_NotFound() throws Exception {
-        doThrow(new GymNotFoundException("Trainee not found"))
+        doThrow(new NotFoundException("Trainee not found"))
                 .when(traineeService).deleteTrainee("404");
 
         mockMvc = MockMvcBuilders
@@ -155,7 +155,7 @@ public class TraineeControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Trainee not found"))
                 .andExpect(jsonPath("$.statusCode").value(404))
-                .andExpect(jsonPath("$.exceptionType").value("GymNotFoundException"));
+                .andExpect(jsonPath("$.exceptionType").value("NotFoundException"));
     }
 
 

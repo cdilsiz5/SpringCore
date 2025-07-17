@@ -1,51 +1,51 @@
 package com.epam.springcore.service;
 
 import com.epam.springcore.dto.TrainingDto;
-import com.epam.springcore.request.create.CreateTrainingRequest;
+import com.epam.springcore.request.training.CreateTrainingRequest;
 
 import java.util.List;
 
 /**
- * Service interface for managing Training entities.
+ * Service interface for managing Training sessions.
  */
 public interface ITrainingService {
 
     /**
-     * Creates a new training session based on the given request.
+     * Creates a new training session.
      *
-     * @param request the request object containing training data
-     * @return the created Training as DTO
+     * @param request training creation request
+     * @return created TrainingDto
      */
     TrainingDto createTraining(CreateTrainingRequest request);
 
     /**
-     * Retrieves a training session by its ID.
+     * Retrieves a training session by ID.
      *
-     * @param id the ID of the training
-     * @return the found Training DTO or null if not found
+     * @param id training session ID
+     * @return the corresponding TrainingDto
      */
     TrainingDto getTraining(String id);
 
     /**
-     * Returns all trainings in the system.
+     * Returns all training sessions.
      *
-     * @return a collection of Training DTOs
+     * @return list of TrainingDto
      */
     List<TrainingDto> getAllTrainings();
 
     /**
-     * Updates an existing training session by ID.
+     * Updates an existing training session.
      *
-     * @param id      the ID of the training to update
-     * @param request the updated data
-     * @return the found Training DTO or null if not found
+     * @param id      training session ID
+     * @param request update request
+     * @return updated TrainingDto
      */
     TrainingDto updateTraining(String id, CreateTrainingRequest request);
 
     /**
-     * Deletes a training session by its ID.
+     * Deletes a training session by ID.
      *
-     * @param id the ID of the training to delete
+     * @param id training session ID
      */
     void deleteTraining(String id);
 }

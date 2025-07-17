@@ -1,13 +1,13 @@
 package com.epam.springcore.service.impl;
 
-import com.epam.springcore.dao.TrainingDao;
-import com.epam.springcore.dao.UserDao;
+import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.repository.TrainingRepository;
+import com.epam.springcore.repository.UserRepository;
 import com.epam.springcore.dto.TrainingDto;
-import com.epam.springcore.exception.GymNotFoundException;
 import com.epam.springcore.model.Training;
 import com.epam.springcore.model.User;
-import com.epam.springcore.model.enums.TrainingType;
-import com.epam.springcore.request.create.CreateTrainingRequest;
+import com.epam.springcore.model.enums.Specialization;
+import com.epam.springcore.request.training.CreateTrainingRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,10 +23,10 @@ import static org.mockito.Mockito.*;
 public class TrainingServiceImplTest {
 
     @Mock
-    private TrainingDao trainingDao;
+    private TrainingRepository trainingRepository;
 
     @Mock
-    private UserDao userDao;
+    private UserRepository userRepository;
 
     @InjectMocks
     private TrainingServiceImpl trainingService;
@@ -44,7 +44,7 @@ public class TrainingServiceImplTest {
                 request.getTraineeId(),
                 request.getTrainerId(),
                 request.getDate(),
-                TrainingType.CROSSFIT,
+                Specialization.CROSSFIT,
                 request.getDurationMinutes()
         );
         training.setId("training-123");
@@ -55,9 +55,9 @@ public class TrainingServiceImplTest {
         User trainer = new User("veli", "trainer", Collections.emptyList());
         trainer.setId("trainer-1");
 
-        when(trainingDao.save(any(Training.class))).thenReturn(training);
-        when(userDao.findById("trainee-1")).thenReturn(trainee);
-        when(userDao.findById("trainer-1")).thenReturn(trainer);
+        when(trainingRepository.save(any(Training.class))).thenReturn(training);
+        when(userRepository.findById("trainee-1")).thenReturn(trainee);
+        when(userRepository.findById("trainer-1")).thenReturn(trainer);
 
         TrainingDto result = trainingService.createTraining(request);
 
@@ -66,13 +66,13 @@ public class TrainingServiceImplTest {
         assertEquals("trainer-1", result.getTrainerId());
         assertEquals("CROSSFIT", result.getType());
 
-        verify(trainingDao).save(any(Training.class));
+        verify(trainingRepository).save(any(Training.class));
     }
 
     @Test
     @DisplayName("Should return training DTO by ID")
     void shouldReturnTrainingById() {
-        Training training = new Training("trainee-1", "trainer-1", "2025-01-01", TrainingType.BOXING, 45);
+        Training training = new Training("trainee-1", "trainer-1", "2025-01-01", Specialization.BOXING, 45);
         training.setId("10");
 
         User trainee = new User("ali", "trainee", Collections.emptyList());
@@ -81,9 +81,9 @@ public class TrainingServiceImplTest {
         User trainer = new User("veli", "trainer", Collections.emptyList());
         trainer.setId("trainer-1");
 
-        when(trainingDao.findById("10")).thenReturn(training);
-        when(userDao.findById("trainee-1")).thenReturn(trainee);
-        when(userDao.findById("trainer-1")).thenReturn(trainer);
+        when(trainingRepository.findById("10")).thenReturn(training);
+        when(userRepository.findById("trainee-1")).thenReturn(trainee);
+        when(userRepository.findById("trainer-1")).thenReturn(trainer);
 
         TrainingDto result = trainingService.getTraining("10");
 
@@ -97,19 +97,19 @@ public class TrainingServiceImplTest {
     @Test
     @DisplayName("Should throw GymGymNotFoundException when training ID not found")
     void shouldThrowIfTrainingNotFound() {
-        when(trainingDao.findById("99")).thenReturn(null);
-        assertThrows(GymNotFoundException.class, () -> trainingService.getTraining("99"));
+        when(trainingRepository.findById("99")).thenReturn(null);
+        assertThrows(NotFoundException.class, () -> trainingService.getTraining("99"));
     }
 
     @Test
     @DisplayName("Should return list of all trainings")
     void shouldReturnAllTrainings() {
-        Training training = new Training("trainee-1", "trainer-1", "2025-01-01", TrainingType.YOGA, 30);
+        Training training = new Training("trainee-1", "trainer-1", "2025-01-01", Specialization.YOGA, 30);
         training.setId("1");
 
-        when(trainingDao.findAll()).thenReturn(List.of(training));
-        when(userDao.findById("trainee-1")).thenReturn(new User("ali", "trainee", Collections.emptyList()));
-        when(userDao.findById("trainer-1")).thenReturn(new User("veli", "trainer", Collections.emptyList()));
+        when(trainingRepository.findAll()).thenReturn(List.of(training));
+        when(userRepository.findById("trainee-1")).thenReturn(new User("ali", "trainee", Collections.emptyList()));
+        when(userRepository.findById("trainer-1")).thenReturn(new User("veli", "trainer", Collections.emptyList()));
 
         List<TrainingDto> result = trainingService.getAllTrainings();
 
@@ -123,7 +123,7 @@ public class TrainingServiceImplTest {
     void shouldCallUpdateTraining() {
         String trainingId = "1";
         CreateTrainingRequest request = new CreateTrainingRequest("trainee-new", "trainer-new", "2025-05-01", "CROSSFIT", 75);
-        Training existing = new Training("trainee-old", "trainer-old", "2024-01-01", TrainingType.YOGA, 45);
+        Training existing = new Training("trainee-old", "trainer-old", "2024-01-01", Specialization.YOGA, 45);
         existing.setId(trainingId);
 
         User trainee = new User("ali", "trainee", Collections.emptyList());
@@ -132,10 +132,10 @@ public class TrainingServiceImplTest {
         User trainer = new User("veli", "trainer", Collections.emptyList());
         trainer.setId("trainer-new");
 
-        when(trainingDao.findById(trainingId)).thenReturn(existing);
-        when(trainingDao.save(existing)).thenReturn(existing);
-        when(userDao.findById("trainee-new")).thenReturn(trainee);
-        when(userDao.findById("trainer-new")).thenReturn(trainer);
+        when(trainingRepository.findById(trainingId)).thenReturn(existing);
+        when(trainingRepository.save(existing)).thenReturn(existing);
+        when(userRepository.findById("trainee-new")).thenReturn(trainee);
+        when(userRepository.findById("trainer-new")).thenReturn(trainer);
 
         TrainingDto result = trainingService.updateTraining(trainingId, request);
 
@@ -143,27 +143,27 @@ public class TrainingServiceImplTest {
         assertEquals(75, result.getDurationMinutes());
         assertEquals("trainee-new", result.getTraineeId());
 
-        verify(trainingDao).save(existing);
+        verify(trainingRepository).save(existing);
     }
 
     @Test
     @DisplayName("Should delete training when exists")
     void shouldDeleteTraining() {
-        Training training = new Training("trainee", "trainer", "2025-01-01", TrainingType.YOGA, 50);
+        Training training = new Training("trainee", "trainer", "2025-01-01", Specialization.YOGA, 50);
         training.setId("5");
 
-        when(trainingDao.findById("5")).thenReturn(training);
+        when(trainingRepository.findById("5")).thenReturn(training);
 
         trainingService.deleteTraining("5");
 
-        verify(trainingDao).delete("5");
+        verify(trainingRepository).delete("5");
     }
 
     @Test
     @DisplayName("Should throw GymGymNotFoundException when deleting non-existing training")
     void shouldThrowWhenDeletingNonExistingTraining() {
-        when(trainingDao.findById("not-exist")).thenReturn(null);
+        when(trainingRepository.findById("not-exist")).thenReturn(null);
 
-        assertThrows(GymNotFoundException.class, () -> trainingService.deleteTraining("not-exist"));
+        assertThrows(NotFoundException.class, () -> trainingService.deleteTraining("not-exist"));
     }
 }

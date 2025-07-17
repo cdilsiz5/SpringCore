@@ -1,12 +1,12 @@
 package com.epam.springcore.service.impl;
 
-import com.epam.springcore.dao.TraineeDao;
-import com.epam.springcore.dao.UserDao;
+import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.repository.TraineeRepository;
+import com.epam.springcore.repository.UserRepository;
 import com.epam.springcore.dto.TraineeDto;
-import com.epam.springcore.exception.GymNotFoundException;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.User;
-import com.epam.springcore.request.create.CreateTraineeRequest;
+import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,10 +23,10 @@ import static org.mockito.Mockito.*;
 class TraineeServiceImplTest {
 
     @Mock
-    private TraineeDao traineeDao;
+    private TraineeRepository traineeDao;
 
     @Mock
-    private UserDao userDao;
+    private UserRepository userRepository;
 
     @InjectMocks
     private TraineeServiceImpl traineeService;
@@ -44,13 +44,13 @@ class TraineeServiceImplTest {
         Trainee trainee = new Trainee(request.getDateOfBirth(), request.getAddress(), user.getId());
 
         when(traineeDao.findAll()).thenReturn(Collections.emptyList());
-        doNothing().when(userDao).save(any(User.class));
+        doNothing().when(userRepository).save(any(User.class));
         when(traineeDao.save(any(Trainee.class))).thenReturn(trainee);
-        when(userDao.findById(user.getId())).thenReturn(user);
+        when(userRepository.findById(user.getId())).thenReturn(user);
 
         traineeService.createTrainee(request);
 
-        verify(userDao).save(any(User.class));
+        verify(userRepository).save(any(User.class));
         verify(traineeDao).save(any(Trainee.class));
     }
 
@@ -64,7 +64,7 @@ class TraineeServiceImplTest {
         User user = new User("ali", "yılmaz", Collections.emptyList());
 
         when(traineeDao.findById(traineeId)).thenReturn(trainee);
-        when(userDao.findById("5")).thenReturn(user);
+        when(userRepository.findById("5")).thenReturn(user);
 
         TraineeDto result = traineeService.getTrainee(traineeId);
 
@@ -74,11 +74,11 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should throw GymNotFoundException when trainee ID is not found")
+    @DisplayName("Should throw NotFoundException when trainee ID is not found")
     void getTrainee_shouldThrowNotFoundException() {
         when(traineeDao.findById("1")).thenReturn(null);
 
-        assertThrows(GymNotFoundException.class, () -> traineeService.getTrainee("1"));
+        assertThrows(NotFoundException.class, () -> traineeService.getTrainee("1"));
     }
 
     @Test
@@ -88,7 +88,7 @@ class TraineeServiceImplTest {
         User user = new User("veli", "demir", Collections.emptyList());
 
         when(traineeDao.findAll()).thenReturn(List.of(trainee));
-        when(userDao.findById("10")).thenReturn(user);
+        when(userRepository.findById("10")).thenReturn(user);
 
         List<TraineeDto> result = traineeService.getAllTrainees();
 
@@ -108,13 +108,13 @@ class TraineeServiceImplTest {
         existingUser.setId("20");
 
         when(traineeDao.findById(traineeId)).thenReturn(existingTrainee);
-        when(userDao.findById("20")).thenReturn(existingUser);
-        doNothing().when(userDao).save(any(User.class));
+        when(userRepository.findById("20")).thenReturn(existingUser);
+        doNothing().when(userRepository).save(any(User.class));
         when(traineeDao.save(any(Trainee.class))).thenReturn(existingTrainee);
 
         traineeService.updateTrainee(traineeId, request);
 
-        verify(userDao).save(any(User.class));
+        verify(userRepository).save(any(User.class));
         verify(traineeDao).save(any(Trainee.class));
     }
 
@@ -132,10 +132,10 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should throw GymNotFoundException when deleting non-existing trainee")
+    @DisplayName("Should throw NotFoundException when deleting non-existing trainee")
     void deleteTrainee_shouldThrowWhenNotFound() {
         when(traineeDao.findById("2")).thenReturn(null);
 
-        assertThrows(GymNotFoundException.class, () -> traineeService.deleteTrainee("2"));
+        assertThrows(NotFoundException.class, () -> traineeService.deleteTrainee("2"));
     }
 }

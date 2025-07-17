@@ -1,51 +1,71 @@
 package com.epam.springcore.service;
 
 import com.epam.springcore.dto.TrainerDto;
-import com.epam.springcore.request.create.CreateTrainerRequest;
+import com.epam.springcore.request.trainer.CreateTrainerRequest;
+import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 
 import java.util.List;
 
 /**
- * Service interface for managing Trainer entities.
+ * Service interface for managing Trainer entities and their operations.
  */
 public interface ITrainerService {
 
     /**
-     * Creates a new trainer based on the given request.
+     * Creates a new trainer profile.
      *
-     * @param request the request object containing trainer data
-     * @return the created Trainer as DTO
+     * @param request trainer creation request
+     * @return the created TrainerDto
      */
     TrainerDto createTrainer(CreateTrainerRequest request);
 
     /**
-     * Retrieves a trainer by their ID.
+     * Retrieves a trainer by their username.
      *
-     * @param id the ID of the trainer
-     * @return the found Trainer DTO or null if not found
+     * @param username trainer's username
+     * @return the corresponding TrainerDto
      */
-    TrainerDto getTrainer(String id);
+    TrainerDto getTrainerByUsername(String username);
 
     /**
-     * Returns all trainers in the system.
+     * Returns all registered trainers.
      *
-     * @return a collection of Trainer DTOs
+     * @return list of TrainerDto
      */
     List<TrainerDto> getAllTrainers();
 
     /**
-     * Updates an existing trainer by ID.
+     * Updates trainer information.
      *
-     * @param id the ID of the trainer to update
-     * @param request the updated data
-     * @return the found Trainer DTO or null if not found
+     * @param username trainer's username
+     * @param request  update request
+     * @return updated TrainerDto
      */
-    TrainerDto updateTrainer(String id, CreateTrainerRequest request);
+    TrainerDto updateTrainer(String username, UpdateTrainerRequest request);
 
     /**
-     * Deletes a trainer by their ID.
+     * Deletes a trainer by their username.
      *
-     * @param id the ID of the trainer to delete
+     * @param username the trainer's username
      */
-    void deleteTrainer(String id);
+    void deleteTrainer(String username);
+
+    /**
+     * Toggles the active/passive status of a trainer.
+     *
+     * @param username trainer's username
+     * @return updated TrainerDto
+     */
+    TrainerDto activateOrDeactivate(String username);
+
+    /**
+     * Returns a filtered list of trainings provided by this trainer.
+     *
+     * @param username     trainer’s username
+     * @param from         start date (optional)
+     * @param to           end date (optional)
+     * @param traineeName  trainee name filter (optional)
+     * @return list of matching trainings TrainerDto's.
+     */
+    List<TrainerDto> getTrainingHistory(String username, String from, String to, String traineeName);
 }
