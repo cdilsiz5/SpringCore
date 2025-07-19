@@ -22,7 +22,7 @@ public class Trainer {
 
     @Enumerated(EnumType.STRING)
     private Specialization specialization;
-    private String userId;
+
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

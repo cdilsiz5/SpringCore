@@ -1,7 +1,11 @@
 package com.epam.springcore.service;
 
+import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.UserDto;
-import com.epam.springcore.request.user.CreateUserRequest;
+import com.epam.springcore.model.User;
+import com.epam.springcore.request.trainee.CreateTraineeRequest;
+import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.user.UpdatePasswordRequest;
 import com.epam.springcore.request.user.LoginRequest;
 
@@ -12,13 +16,7 @@ import java.util.List;
  */
 public interface IUserService {
 
-    /**
-     * Creates a new user.
-     *
-     * @param request user creation request
-     * @return created UserDto
-     */
-    UserDto createUser(CreateUserRequest request);
+
 
     /**
      * Retrieves a user by username.
@@ -58,4 +56,30 @@ public interface IUserService {
      * @return true if credentials are valid, false otherwise
      */
     boolean login(LoginRequest request);
+
+    /**
+     * Creates a new trainee along with associated user account.
+     *
+     * @param request trainee creation request
+     * @return created TraineeDto
+     */
+    TraineeDto createTrainee(CreateTraineeRequest request);
+
+    /**
+     * Creates a new trainer along with associated user account.
+     *
+     * @param request trainer creation request
+     * @return created TrainerDto
+     */
+    TrainerDto createTrainer(CreateTrainerRequest request);
+
+
+    User getUserEntityByUsername(String username);
+
+    /**
+     * Toggles active/passive status of a trainee.
+     *
+     * @param username the username of the trainee
+     */
+     void activateOrDeactivate(String username);
 }

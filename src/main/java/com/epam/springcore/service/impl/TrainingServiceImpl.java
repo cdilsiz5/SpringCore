@@ -1,22 +1,24 @@
 package com.epam.springcore.service.impl;
 
-import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.model.Trainee;
+import com.epam.springcore.model.Trainer;
 import com.epam.springcore.repository.TrainingRepository;
 import com.epam.springcore.repository.UserRepository;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Training;
-import com.epam.springcore.model.User;
-import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.request.training.CreateTrainingRequest;
 import com.epam.springcore.service.ITrainingService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import static com.epam.springcore.mapper.TrainingMapper.TRAINING_MAPPER;
+
 @Service
+@RequiredArgsConstructor
 public class TrainingServiceImpl implements ITrainingService {
 
     private static final Logger log = LoggerFactory.getLogger(TrainingServiceImpl.class);
@@ -24,96 +26,43 @@ public class TrainingServiceImpl implements ITrainingService {
     private final TrainingRepository trainingRepository;
     private final UserRepository userRepository;
 
-    public TrainingServiceImpl(TrainingRepository trainingRepository, UserRepository userRepository) {
-        this.trainingRepository = trainingRepository;
-        this.userRepository = userRepository;
-    }
 
     @Override
     public TrainingDto createTraining(CreateTrainingRequest request) {
-        log.info("Creating new training between trainerId={} and traineeId={}",
-                request.getTrainerId(), request.getTraineeId());
-
-        Training training = new Training(
-                request.getTraineeId(),
-                request.getTrainerId(),
-                request.getDate(),
-                Specialization.valueOf(request.getType().toUpperCase()),
-                request.getDurationMinutes()
-        );
-        Training saved = trainingRepository.save(training);
-
-        log.debug("Training saved with id={}", saved.getId());
-        return toDto(saved);
+        return null;
     }
 
     @Override
     public TrainingDto getTraining(String id) {
-        log.info("Fetching training with ID: {}", id);
-        Training training = trainingRepository.findById(id);
-        if (training == null) {
-            log.warn("Training with ID {} not found", id);
-            throw  new NotFoundException("Training not found");
-        }
-        return toDto(training);
+        return null;
     }
 
     @Override
     public List<TrainingDto> getAllTrainings() {
-        log.info("Fetching all trainings");
-        List<Training> trainings = (List<Training>) trainingRepository.findAll();
-        List<TrainingDto> dtos = new ArrayList<>();
-        for (Training training : trainings) {
-            dtos.add(toDto(training));
-        }
-        return dtos;
+        return List.of();
     }
 
     @Override
     public TrainingDto updateTraining(String id, CreateTrainingRequest request) {
-        log.info("Updating training with ID: {}", id);
-        Training existingTraining = checkTrainingExist(id);
-
-        existingTraining.setTraineeId(request.getTraineeId());
-        existingTraining.setTrainerId(request.getTrainerId());
-        existingTraining.setDate(request.getDate());
-        existingTraining.setType(Specialization.valueOf(request.getType().toUpperCase()));
-        existingTraining.setDurationMinutes(request.getDurationMinutes());
-
-        Training updated = trainingRepository.save(existingTraining);
-        log.debug("Training with ID {} updated", id);
-        return toDto(updated);
+        return null;
     }
 
     @Override
     public void deleteTraining(String id) {
-        log.info("Deleting training with ID: {}", id);
-        checkTrainingExist(id);
-        trainingRepository.delete(id);
-        log.debug("Training with ID {} deleted", id);
+
     }
 
-    private Training checkTrainingExist(String id) {
-        Training existingTraining = trainingRepository.findById(id);
-        if (existingTraining == null) {
-            log.error("Training with ID {} not found", id);
-            throw new NotFoundException("Training with ID: " + id + " not found");
-        }
-        return existingTraining;
+    @Override
+    public List<TrainingDto> findAllByTrainer(Trainer trainer) {
+        List<Training> trainingList=trainingRepository.findAllByTrainer(trainer);
+        return TRAINING_MAPPER.toTrainingDtoList(trainingList);
     }
 
-    private TrainingDto toDto(Training training) {
-        User trainer = userRepository.findById(training.getTrainerId());
-        User trainee = userRepository.findById(training.getTraineeId());
-
-        TrainingDto dto = new TrainingDto();
-        dto.setId(training.getId());
-        dto.setTrainerId(trainer.getId());
-        dto.setTraineeId(trainee.getId());
-        dto.setDate(training.getDate());
-        dto.setType(training.getType().toString());
-        dto.setDurationMinutes(training.getDurationMinutes());
-
-        return dto;
+    @Override
+    public List<TrainingDto> findAllByTrainee(Trainee trainee) {
+        List<Training> trainingList=trainingRepository.findAllByTrainee(trainee);
+        return TRAINING_MAPPER.toTrainingDtoList(trainingList);
     }
+
+
 }

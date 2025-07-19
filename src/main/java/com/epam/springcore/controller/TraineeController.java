@@ -29,18 +29,6 @@ public class TraineeController {
         this.traineeService = traineeService;
     }
 
-    @Operation(summary = "Create Trainee", description = "Create a new Trainee")
-    @ApiResponses(
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Created",
-                    content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = TraineeDto.class))))
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public TraineeDto createTrainee(@RequestBody @Valid CreateTraineeRequest request) {
-        return traineeService.createTrainee(request);
-    }
     @ApiResponses(
             @ApiResponse(
                     responseCode = "200",

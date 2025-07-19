@@ -1,10 +1,13 @@
 package com.epam.springcore.util;
 
+import org.springframework.stereotype.Component;
+
 import java.util.Collection;
 
+@Component
 public class CredentialGenerator {
 
-    public static String generateUsername(String firstName, String lastName, Collection<?> existingEntities) {
+    public  String generateUsername(String firstName, String lastName, Collection<?> existingEntities) {
         String baseUsername = firstName + "." + lastName;
         int counter = 1;
 
@@ -17,7 +20,7 @@ public class CredentialGenerator {
         return username;
     }
 
-    private static boolean usernameExists(String username, Collection<?> entities) {
+    private  boolean usernameExists(String username, Collection<?> entities) {
         return entities.stream().anyMatch(e -> {
             try {
                 var method = e.getClass().getMethod("getUsername");
@@ -29,7 +32,7 @@ public class CredentialGenerator {
         });
     }
 
-    public static String generateRandomPassword() {
+    public  String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 10; i++) {

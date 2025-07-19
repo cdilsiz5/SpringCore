@@ -29,19 +29,6 @@ public class TrainerController {
         this.trainerService = trainerService;
     }
 
-    @Operation(summary = "Create Trainer", description = "Create a new Trainer")
-    @ApiResponses(
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Created",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = TrainerDto.class))))
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public TrainerDto createTrainer(@RequestBody @Valid CreateTrainerRequest request) {
-        return trainerService.createTrainer(request);
-    }
-
     @Operation(summary = "Get Trainer by ID", description = "Retrieve a Trainer by ID")
     @ApiResponses(
             @ApiResponse(

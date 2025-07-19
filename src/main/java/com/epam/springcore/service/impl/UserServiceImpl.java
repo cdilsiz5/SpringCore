@@ -1,20 +1,26 @@
 package com.epam.springcore.service.impl;
 
+import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.UserDto;
 import com.epam.springcore.exception.InvalidCredentialsException;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.model.User;
 import com.epam.springcore.repository.UserRepository;
+import com.epam.springcore.request.trainee.CreateTraineeRequest;
+import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.user.CreateUserRequest;
 import com.epam.springcore.request.user.LoginRequest;
 import com.epam.springcore.request.user.UpdatePasswordRequest;
+import com.epam.springcore.service.ITraineeService;
+import com.epam.springcore.service.ITrainerService;
 import com.epam.springcore.service.IUserService;
+import com.epam.springcore.util.CredentialGenerator;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-
 import static com.epam.springcore.mapper.UserMapper.USER_MAPPER;
 
 @RequiredArgsConstructor
@@ -23,15 +29,9 @@ import static com.epam.springcore.mapper.UserMapper.USER_MAPPER;
 public class UserServiceImpl implements IUserService {
 
     private final UserRepository userRepository;
-
-    @Override
-    public UserDto createUser(CreateUserRequest request) {
-        log.info("Creating user with Name : {}", request.getFirstName()+" "+request.getLastName());
-        User user = USER_MAPPER.createUser(request);
-        User savedUser = userRepository.save(user);
-        log.info("User created successfully: {}", savedUser.getUsername());
-        return USER_MAPPER.toUserDto(savedUser);
-    }
+    private final ITrainerService trainerService;
+    private final ITraineeService traineeService;
+    private final CredentialGenerator credentialGenerator;
 
     @Override
     public UserDto getUserByUsername(String username) {
@@ -94,10 +94,65 @@ public class UserServiceImpl implements IUserService {
         return true;
     }
 
+    @Override
+    public TraineeDto createTrainee(CreateTraineeRequest request) {
+        log.info("Creating User for Trainee: {} {}", request.getFirstName(), request.getLastName());
+
+        CreateUserRequest userRequest = CreateUserRequest.builder()
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .build();
+
+        User savedUser = createUserEntity(userRequest);
+        log.info("User created for Trainee. User ID: {}", savedUser.getId());
+
+        return traineeService.createTraineeEntity(savedUser, request.getDateOfBirth(), request.getAddress());
+    }
+
+    @Override
+    public TrainerDto createTrainer(CreateTrainerRequest request) {
+        log.info("Creating User for Trainer: {} {}", request.getFirstName(), request.getLastName());
+
+        CreateUserRequest userRequest = CreateUserRequest.builder()
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .build();
+
+        User savedUser = createUserEntity(userRequest);
+        log.info("User created for Trainer. User ID: {}", savedUser.getId());
+
+        return trainerService.createTrainerEntity(savedUser, request.getSpecialty());
+    }
+
     private User checkIfUserExistByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException(
                         String.format("User with username %s not found", username)
                 ));
     }
+    public User getUserEntityByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found: " + username));
+    }
+
+    @Override
+    @Transactional
+    public void activateOrDeactivate(String username) {
+        log.info("Toggling activation status for user with username: {}", username);
+        User user = getUserEntityByUsername(username);
+        user.setActive(!user.isActive());
+        log.info("User activation status for '{}' changed to {}", username, user.isActive());
+        userRepository.save(user);
+     }
+    private User createUserEntity(CreateUserRequest request) {
+        log.info("Creating user with Name : {}", request.getFirstName()+" "+request.getLastName());
+        User user = USER_MAPPER.createUser(request);
+        user.setUsername(credentialGenerator.generateUsername(request.getFirstName(), request.getLastName(),userRepository.findAll()));
+        user.setPassword(credentialGenerator.generateRandomPassword());
+        User savedUser = userRepository.save(user);
+        log.info("User created successfully: {}", savedUser.getUsername());
+        return  savedUser;
+    }
+
+
 }

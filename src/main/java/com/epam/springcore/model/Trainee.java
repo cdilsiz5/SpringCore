@@ -22,9 +22,8 @@ public class Trainee {
     private Long id;
     private LocalDate dateOfBirth;
     private String address;
-    private String userId;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 

@@ -1,9 +1,14 @@
 package com.epam.springcore.service;
 
 import com.epam.springcore.dto.TrainerDto;
+import com.epam.springcore.dto.TrainingDto;
+import com.epam.springcore.model.Trainer;
+import com.epam.springcore.model.User;
+import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -14,11 +19,10 @@ public interface ITrainerService {
     /**
      * Creates a new trainer profile.
      *
-     * @param request trainer creation request
+     * @param user,specialty trainer creation request
      * @return the created TrainerDto
      */
-    TrainerDto createTrainer(CreateTrainerRequest request);
-
+    TrainerDto createTrainerEntity(User user, Specialization specialty);
     /**
      * Retrieves a trainer by their username.
      *
@@ -51,14 +55,6 @@ public interface ITrainerService {
     void deleteTrainer(String username);
 
     /**
-     * Toggles the active/passive status of a trainer.
-     *
-     * @param username trainer's username
-     * @return updated TrainerDto
-     */
-    TrainerDto activateOrDeactivate(String username);
-
-    /**
      * Returns a filtered list of trainings provided by this trainer.
      *
      * @param username     trainer’s username
@@ -67,5 +63,15 @@ public interface ITrainerService {
      * @param traineeName  trainee name filter (optional)
      * @return list of matching trainings TrainerDto's.
      */
-    List<TrainerDto> getTrainingHistory(String username, String from, String to, String traineeName);
-}
+    List<TrainingDto>  getTrainingHistory(String username, LocalDate from, LocalDate to, String traineeName, String traineeLastName);
+
+
+    /**
+     * Retrieves a trainer by their trainerId.
+     *
+     * @param trainerId trainer's username
+     * @return the corresponding Trainer
+     */
+     Trainer getTrainerById(Long trainerId) ;
+
+    }

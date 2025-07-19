@@ -1,10 +1,13 @@
 package com.epam.springcore.service;
 
 import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.dto.TrainingDto;
+import com.epam.springcore.model.User;
 import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeTrainerListRequest;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -15,10 +18,10 @@ public interface ITraineeService {
     /**
      * Creates a new trainee with the provided data.
      *
-     * @param request the request containing trainee information
+     * @param  user,dob,address the request containing trainee information
      * @return the created trainee as a DTO
      */
-    TraineeDto createTrainee(CreateTraineeRequest request);
+    TraineeDto createTraineeEntity(User user, LocalDate dob, String address);
 
     /**
      * Retrieves a trainee by their username.
@@ -51,13 +54,6 @@ public interface ITraineeService {
      */
     void deleteTrainee(String username);
 
-    /**
-     * Toggles active/passive status of a trainee.
-     *
-     * @param username the username of the trainee
-     * @return the updated TraineeDto with new active status
-     */
-    TraineeDto activateOrDeactivate(String username);
 
     /**
      * Updates the list of trainers assigned to a trainee.
@@ -78,8 +74,7 @@ public interface ITraineeService {
      * @param trainingType training type filter (optional)
      * @return list of matching training TraineeDto sessions
      */
-    List<TraineeDto> getTrainingHistory(String username, String from, String to, String trainerName, String trainingType);
-
+    List<TrainingDto> getTrainingHistory(String username, String from, String to, String trainerName, String trainerLastname, String trainingType);
     /**
      * Returns trainers not currently assigned to the trainee.
      *
