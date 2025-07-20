@@ -1,6 +1,7 @@
 package com.epam.springcore.service;
 
 import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.User;
 import com.epam.springcore.request.trainee.CreateTraineeRequest;
@@ -81,5 +82,5 @@ public interface ITraineeService {
      * @param username the trainee's username
      * @return list of unassigned trainer TraineeDto's.
      */
-    List<TraineeDto> getUnassignedTrainers(String username);
+    List<TrainerDto> getUnassignedTrainers(String username);
 }

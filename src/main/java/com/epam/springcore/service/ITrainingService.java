@@ -4,6 +4,7 @@ import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.request.training.CreateTrainingRequest;
+import com.epam.springcore.request.training.UpdateTrainingRequest;
 
 import java.util.List;
 
@@ -26,7 +27,7 @@ public interface ITrainingService {
      * @param id training session ID
      * @return the corresponding TrainingDto
      */
-    TrainingDto getTraining(String id);
+    TrainingDto getTraining(Long id);
 
     /**
      * Returns all training sessions.
@@ -42,23 +43,29 @@ public interface ITrainingService {
      * @param request update request
      * @return updated TrainingDto
      */
-    TrainingDto updateTraining(String id, CreateTrainingRequest request);
+    TrainingDto updateTraining(Long id, UpdateTrainingRequest request);
 
     /**
      * Deletes a training session by ID.
      *
      * @param id training session ID
      */
-    void deleteTraining(String id);
+    void deleteTraining(Long id);
 
     /**
-     * Retrieves a training List bu Trainer
+     * Retrieves a training List by Trainer
      *
      * @param trainer training session ID
      * @return the corresponding TrainingDto List
      */
     List<TrainingDto> findAllByTrainer(Trainer trainer);
 
+    /**
+     * Retrieves a training List byTrainee
+     *
+     * @param trainee training session ID
+     * @return the corresponding TrainingDto List
+     */
     List<TrainingDto> findAllByTrainee(Trainee trainee);
 
 

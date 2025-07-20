@@ -1,6 +1,7 @@
 package com.epam.springcore.service.impl;
 
 import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.model.Trainee;
@@ -119,10 +120,21 @@ public class TraineeServiceImpl implements ITraineeService {
         return filtered;
     }
 
-
     @Override
-    public List<TraineeDto> getUnassignedTrainers(String username) {
-        return List.of();
+    public List<TrainerDto> getUnassignedTrainers(String username) {
+        log.info("Fetching unassigned trainers for trainee: {}", username);
+
+        Trainee trainee = getTraineeEntityByUsername(username);
+
+        Set<Trainer> assignedTrainers = trainee.getTrainers();
+
+        List<TrainerDto> allTrainers = trainerService.getAllTrainers();
+
+        List<TrainerDto> unassignedTrainers = allTrainers.stream()
+                .filter(trainer -> !assignedTrainers.contains(trainer))
+                .toList();
+        log.debug("Unassigned trainers found for trainee '{}': {}", username, unassignedTrainers.size());
+        return unassignedTrainers;
     }
 
     private Trainee getTraineeEntityByUsername(String username) {

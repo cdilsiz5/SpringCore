@@ -2,6 +2,7 @@ package com.epam.springcore.controller;
 
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.request.training.CreateTrainingRequest;
+import com.epam.springcore.request.training.UpdateTrainingRequest;
 import com.epam.springcore.service.ITrainingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,7 +51,7 @@ public class TrainingController {
                             schema = @Schema(implementation = TrainingDto.class))))
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public TrainingDto getTraining(@PathVariable String id) {
+    public TrainingDto getTraining(@PathVariable Long id) {
         return trainingService.getTraining(id);
     }
 
@@ -76,7 +77,7 @@ public class TrainingController {
                             schema = @Schema(implementation = TrainingDto.class))))
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public TrainingDto updateTraining(@PathVariable String id, @RequestBody @Valid CreateTrainingRequest request) {
+    public TrainingDto updateTraining(@PathVariable Long id, @RequestBody @Valid UpdateTrainingRequest request) {
         return trainingService.updateTraining(id, request);
     }
 
@@ -87,7 +88,7 @@ public class TrainingController {
                     description = "No Content"))
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTraining(@PathVariable String id) {
+    public void deleteTraining(@PathVariable Long id) {
         trainingService.deleteTraining(id);
     }
 }

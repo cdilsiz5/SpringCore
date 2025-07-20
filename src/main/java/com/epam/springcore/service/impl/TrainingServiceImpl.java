@@ -1,12 +1,13 @@
 package com.epam.springcore.service.impl;
 
+import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.repository.TrainingRepository;
-import com.epam.springcore.repository.UserRepository;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Training;
 import com.epam.springcore.request.training.CreateTrainingRequest;
+import com.epam.springcore.request.training.UpdateTrainingRequest;
 import com.epam.springcore.service.ITrainingService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -24,45 +25,73 @@ public class TrainingServiceImpl implements ITrainingService {
     private static final Logger log = LoggerFactory.getLogger(TrainingServiceImpl.class);
 
     private final TrainingRepository trainingRepository;
-    private final UserRepository userRepository;
-
 
     @Override
     public TrainingDto createTraining(CreateTrainingRequest request) {
-        return null;
+        log.info("Creating training between trainerId={} and traineeId={}",
+                request.getTrainerId(), request.getTraineeId());
+
+        Training training = TRAINING_MAPPER.createTraining(request);
+        Training savedTraining = trainingRepository.save(training);
+
+        log.info("Training created with ID: {}", savedTraining.getId());
+        return TRAINING_MAPPER.toTrainingDto(savedTraining);
     }
 
     @Override
-    public TrainingDto getTraining(String id) {
-        return null;
+    public TrainingDto getTraining(Long id) {
+        log.info("Fetching training with ID: {}", id);
+        Training training = getTrainingEntityById(id);
+        return TRAINING_MAPPER.toTrainingDto(training);
     }
 
     @Override
     public List<TrainingDto> getAllTrainings() {
-        return List.of();
+        log.info("Fetching all trainings");
+        List<Training> trainings = trainingRepository.findAll();
+        log.debug("Total trainings fetched: {}", trainings.size());
+        return TRAINING_MAPPER.toTrainingDtoList(trainings);
     }
 
     @Override
-    public TrainingDto updateTraining(String id, CreateTrainingRequest request) {
-        return null;
+    public TrainingDto updateTraining(Long id, UpdateTrainingRequest request) {
+        log.info("Updating training with ID: {}", id);
+        Training training = getTrainingEntityById(id);
+        TRAINING_MAPPER.updateTrainingRequest(request, training);
+        Training savedTraining = trainingRepository.save(training);
+        log.info("Training updated. ID: {}", savedTraining.getId());
+        return TRAINING_MAPPER.toTrainingDto(savedTraining);
     }
 
     @Override
-    public void deleteTraining(String id) {
-
+    public void deleteTraining(Long id) {
+        log.info("Deleting training with ID: {}", id);
+        Training training = getTrainingEntityById(id);
+        trainingRepository.delete(training);
+        log.info("Training deleted. ID: {}", training.getId());
     }
 
     @Override
     public List<TrainingDto> findAllByTrainer(Trainer trainer) {
-        List<Training> trainingList=trainingRepository.findAllByTrainer(trainer);
+        log.info("Fetching trainings for trainer ID: {}", trainer.getId());
+        List<Training> trainingList = trainingRepository.findAllByTrainer(trainer);
+        log.debug("Trainings found for trainer ID {}: {}", trainer.getId(), trainingList.size());
         return TRAINING_MAPPER.toTrainingDtoList(trainingList);
     }
 
     @Override
     public List<TrainingDto> findAllByTrainee(Trainee trainee) {
-        List<Training> trainingList=trainingRepository.findAllByTrainee(trainee);
+        log.info("Fetching trainings for trainee ID: {}", trainee.getId());
+        List<Training> trainingList = trainingRepository.findAllByTrainee(trainee);
+        log.debug("Trainings found for trainee ID {}: {}", trainee.getId(), trainingList.size());
         return TRAINING_MAPPER.toTrainingDtoList(trainingList);
     }
 
-
+    private Training getTrainingEntityById(Long id) {
+        return trainingRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Training not found with ID: {}", id);
+                    return new NotFoundException("Training with id: " + id + " not found");
+                });
+    }
 }

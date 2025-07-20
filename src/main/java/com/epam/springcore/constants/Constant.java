@@ -12,12 +12,14 @@ public class Constant {
     public static final String API_EPAM = "/epam";
 
     // Trainer endpoint
-    public static final String API_TRAINER = "/trainer";
+    public static final String API_TRAINER = "/trainers";
 
     // Trainee endpoint
-    public static final String API_TRAINEE = "/trainee";
+    public static final String API_TRAINEE = "/trainees";
 
     // Training endpoint
-    public static final String API_TRAINING = "/training";
+    public static final String API_TRAINING = "/trainings";
 
+    //User enpoint
+    public static final String API_USER = "/users";
 }

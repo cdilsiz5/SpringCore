@@ -25,14 +25,7 @@ public class AppConfig implements WebMvcConfigurer {
         mapper.registerModule(new JavaTimeModule());
         converters.add(new MappingJackson2HttpMessageConverter(mapper));
      }
-    @Bean
-    public FilterRegistrationBean<ActiveUserFilter> activeUserFilter() {
-        FilterRegistrationBean<ActiveUserFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new ActiveUserFilter());
-        registrationBean.addUrlPatterns("/api/epam/v1/*");
-        registrationBean.setOrder(1);
-        return registrationBean;
-    }
+
 
 
 }
