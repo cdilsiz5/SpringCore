@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: gym_crm_postgres
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: gym_crm
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: gym_crm_pgadmin
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gym.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:

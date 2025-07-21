@@ -3,6 +3,7 @@ package com.epam.springcore.service.impl;
 import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.mapper.TrainerMapper;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.User;
 import com.epam.springcore.model.enums.Specialization;
@@ -18,7 +19,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.epam.springcore.mapper.TrainerMapper.TRAINER_MAPPER;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -27,6 +27,7 @@ public class TrainerServiceImpl implements ITrainerService {
 
     private final TrainerRepository trainerRepository;
     private final ITrainingService trainingService;
+    private final TrainerMapper trainerMapper;
 
     @Override
     public TrainerDto createTrainerEntity(User user, Specialization specialty) {
@@ -37,19 +38,19 @@ public class TrainerServiceImpl implements ITrainerService {
                 .build();
         Trainer savedTrainer = trainerRepository.save(trainer);
         log.info("Trainer saved with ID: {}", savedTrainer.getId());
-        return TRAINER_MAPPER.toTrainerDto(savedTrainer);
+        return trainerMapper.toTrainerDto(savedTrainer);
     }
 
     @Override
     public TrainerDto getTrainerByUsername(String username) {
         log.info("Fetching Trainer by username: {}", username);
-        return TRAINER_MAPPER.toTrainerDto(getTrainerEntityByUsername(username));
+        return trainerMapper.toTrainerDto(getTrainerEntityByUsername(username));
     }
 
     @Override
     public List<TrainerDto> getAllTrainers() {
         log.info("Fetching all trainers");
-        List<TrainerDto> trainers = TRAINER_MAPPER.toTrainerDtoList(trainerRepository.findAll());
+        List<TrainerDto> trainers = trainerMapper.toTrainerDtoList(trainerRepository.findAll());
         log.debug("Total trainers fetched: {}", trainers.size());
         return trainers;
     }
@@ -58,10 +59,10 @@ public class TrainerServiceImpl implements ITrainerService {
     public TrainerDto updateTrainer(String username, UpdateTrainerRequest request) {
         log.info("Updating Trainer with username: {}", username);
         Trainer trainer = getTrainerEntityByUsername(username);
-        TRAINER_MAPPER.updateTrainerRequest(request, trainer);
+        trainerMapper.updateTrainerRequest(request, trainer);
         Trainer updatedTrainer = trainerRepository.save(trainer);
         log.info("Trainer updated. ID: {}", updatedTrainer.getId());
-        return TRAINER_MAPPER.toTrainerDto(updatedTrainer);
+        return trainerMapper.toTrainerDto(updatedTrainer);
     }
 
     @Override

@@ -9,8 +9,9 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class TrainingDto {
+    private Long id;
     private LocalDate date;
-    private int duration;
+    private Integer duration;
     private TrainerDto trainer;
     private TraineeDto trainee;
     private String trainingType;

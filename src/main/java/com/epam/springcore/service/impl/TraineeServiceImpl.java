@@ -4,6 +4,7 @@ import com.epam.springcore.dto.TraineeDto;
 import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.mapper.TraineeMapper;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.User;
@@ -23,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.epam.springcore.mapper.TraineeMapper.TRAINEE_MAPPER;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,36 +32,44 @@ public class TraineeServiceImpl implements ITraineeService {
     private final TraineeRepository traineeRepository;
     private final ITrainerService trainerService;
     private final ITrainingService trainingService;
-
+    private final TraineeMapper traineeMapper;
     @Override
     public TraineeDto createTraineeEntity(User user, LocalDate dob, String address) {
+        log.info("Creating trainee entity with dob: {}, address: {}", dob, address);
         Trainee trainee=Trainee.builder()
                 .user(user)
                 .dateOfBirth(dob)
                 .address(address)
                 .build();
         Trainee savedTrainee=traineeRepository.save(trainee);
-        return TRAINEE_MAPPER.toTraineeDto(savedTrainee);
+        log.info("Trainee entity created: {}", savedTrainee);
+        return traineeMapper.toTraineeDto(savedTrainee);
     }
 
     @Override
     public TraineeDto getTraineeByUsername(String username) {
+        log.info("Fetching trainee by username: {}", username);
         Trainee trainee = getTraineeEntityByUsername(username);
-        return TRAINEE_MAPPER.toTraineeDto(trainee);
+        return traineeMapper.toTraineeDto(trainee);
     }
 
 
     @Override
     public List<TraineeDto> getAllTrainees() {
-        return TRAINEE_MAPPER.toTraineeDtoList(traineeRepository.findAll());
+        log.info("Fetching all trainees");
+        List<TraineeDto> list=traineeMapper.toTraineeDtoList(traineeRepository.findAll());
+        log.debug("Total trainees fetched: {}", list.size());
+        return list;
     }
 
     @Override
     public TraineeDto updateTrainee(String username, UpdateTraineeRequest request) {
+        log.info("Updating Trainer with username: {}", username);
         Trainee trainee = getTraineeEntityByUsername(username);
-        TRAINEE_MAPPER.updateTraineeRequest(request, trainee);
+        traineeMapper.updateTraineeRequest(request, trainee);
         Trainee updatedTrainee = traineeRepository.save(trainee);
-        return TRAINEE_MAPPER.toTraineeDto(updatedTrainee);
+        log.info("Trainee updated. ID: {}", updatedTrainee.getId());
+        return traineeMapper.toTraineeDto(updatedTrainee);
 
     }
 
@@ -90,7 +98,7 @@ public class TraineeServiceImpl implements ITraineeService {
 
         log.info("Trainer list updated for trainee '{}', assigned trainer count: {}", username, trainers.size());
 
-        return TRAINEE_MAPPER.toTraineeDto(updatedTrainee);
+        return traineeMapper.toTraineeDto(updatedTrainee);
     }
 
 

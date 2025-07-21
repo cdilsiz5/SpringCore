@@ -1,6 +1,7 @@
 package com.epam.springcore.service.impl;
 
 import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.mapper.TrainingMapper;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.repository.TrainingRepository;
@@ -16,8 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static com.epam.springcore.mapper.TrainingMapper.TRAINING_MAPPER;
-
 @Service
 @RequiredArgsConstructor
 public class TrainingServiceImpl implements ITrainingService {
@@ -25,24 +24,25 @@ public class TrainingServiceImpl implements ITrainingService {
     private static final Logger log = LoggerFactory.getLogger(TrainingServiceImpl.class);
 
     private final TrainingRepository trainingRepository;
+    private final TrainingMapper trainingMapper;
 
     @Override
     public TrainingDto createTraining(CreateTrainingRequest request) {
         log.info("Creating training between trainerId={} and traineeId={}",
                 request.getTrainerId(), request.getTraineeId());
 
-        Training training = TRAINING_MAPPER.createTraining(request);
+        Training training = trainingMapper.createTraining(request);
         Training savedTraining = trainingRepository.save(training);
 
         log.info("Training created with ID: {}", savedTraining.getId());
-        return TRAINING_MAPPER.toTrainingDto(savedTraining);
+        return trainingMapper.toTrainingDto(savedTraining);
     }
 
     @Override
     public TrainingDto getTraining(Long id) {
         log.info("Fetching training with ID: {}", id);
         Training training = getTrainingEntityById(id);
-        return TRAINING_MAPPER.toTrainingDto(training);
+        return trainingMapper.toTrainingDto(training);
     }
 
     @Override
@@ -50,17 +50,17 @@ public class TrainingServiceImpl implements ITrainingService {
         log.info("Fetching all trainings");
         List<Training> trainings = trainingRepository.findAll();
         log.debug("Total trainings fetched: {}", trainings.size());
-        return TRAINING_MAPPER.toTrainingDtoList(trainings);
+        return trainingMapper.toTrainingDtoList(trainings);
     }
 
     @Override
     public TrainingDto updateTraining(Long id, UpdateTrainingRequest request) {
         log.info("Updating training with ID: {}", id);
         Training training = getTrainingEntityById(id);
-        TRAINING_MAPPER.updateTrainingRequest(request, training);
+        trainingMapper.updateTrainingRequest(request, training);
         Training savedTraining = trainingRepository.save(training);
         log.info("Training updated. ID: {}", savedTraining.getId());
-        return TRAINING_MAPPER.toTrainingDto(savedTraining);
+        return trainingMapper.toTrainingDto(savedTraining);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class TrainingServiceImpl implements ITrainingService {
         log.info("Fetching trainings for trainer ID: {}", trainer.getId());
         List<Training> trainingList = trainingRepository.findAllByTrainer(trainer);
         log.debug("Trainings found for trainer ID {}: {}", trainer.getId(), trainingList.size());
-        return TRAINING_MAPPER.toTrainingDtoList(trainingList);
+        return trainingMapper.toTrainingDtoList(trainingList);
     }
 
     @Override
@@ -84,7 +84,7 @@ public class TrainingServiceImpl implements ITrainingService {
         log.info("Fetching trainings for trainee ID: {}", trainee.getId());
         List<Training> trainingList = trainingRepository.findAllByTrainee(trainee);
         log.debug("Trainings found for trainee ID {}: {}", trainee.getId(), trainingList.size());
-        return TRAINING_MAPPER.toTrainingDtoList(trainingList);
+        return trainingMapper.toTrainingDtoList(trainingList);
     }
 
     private Training getTrainingEntityById(Long id) {

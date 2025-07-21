@@ -27,7 +27,7 @@ import static com.epam.springcore.constants.Constant.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(API_PREFIX + API_EPAM + API_VERSION_V1 + "/trainees")
+@RequestMapping(API_PREFIX + API_EPAM + API_VERSION_V1 + API_TRAINEE)
 @Tag(name = "Trainee Resource", description = "SpringCore REST APIs for Trainees")
 public class TraineeController {
 

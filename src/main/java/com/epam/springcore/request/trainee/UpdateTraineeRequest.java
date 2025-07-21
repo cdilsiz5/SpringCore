@@ -15,12 +15,6 @@ import java.time.LocalDate;
 @Builder
 public class UpdateTraineeRequest {
 
-    @NotBlank(message = "First name is required")
-    private String firstName;
-
-    @NotBlank(message = "Last name is required")
-    private String lastName;
-
     @NotNull(message = "Date of birth is required")
     @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;

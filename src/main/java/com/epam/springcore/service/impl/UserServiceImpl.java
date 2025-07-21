@@ -5,6 +5,7 @@ import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.UserDto;
 import com.epam.springcore.exception.InvalidCredentialsException;
 import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.mapper.UserMapper;
 import com.epam.springcore.model.User;
 import com.epam.springcore.repository.UserRepository;
 import com.epam.springcore.request.trainee.CreateTraineeRequest;
@@ -21,8 +22,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import static com.epam.springcore.mapper.UserMapper.USER_MAPPER;
-
 @RequiredArgsConstructor
 @Slf4j
 @Service
@@ -32,18 +31,19 @@ public class UserServiceImpl implements IUserService {
     private final ITrainerService trainerService;
     private final ITraineeService traineeService;
     private final CredentialGenerator credentialGenerator;
+    private final UserMapper userMapper;
 
     @Override
     public UserDto getUserByUsername(String username) {
         log.info("Fetching user with username: {}", username);
         User user = checkIfUserExistByUsername(username);
-        return USER_MAPPER.toUserDto(user);
+        return userMapper.toUserDto(user);
     }
 
     @Override
     public List<UserDto> getAllUsers() {
         log.info("Fetching all users");
-        return USER_MAPPER.toUserDtoList(userRepository.findAll());
+        return userMapper.toUserDtoList(userRepository.findAll());
     }
 
     @Override
@@ -63,11 +63,11 @@ public class UserServiceImpl implements IUserService {
             log.warn("Old password does not match for user: {}", username);
             throw new InvalidCredentialsException("Old password does not match.");
         }
-
+        log.info("old password : {}", user.getPassword());
         user.setPassword(request.getNewPassword());
         User updatedUser = userRepository.save(user);
-        log.info("Password updated successfully for user: {}", username);
-        return USER_MAPPER.toUserDto(updatedUser);
+        log.info(updatedUser.toString());
+        return userMapper.toUserDto(updatedUser);
     }
 
     @Override
@@ -77,7 +77,7 @@ public class UserServiceImpl implements IUserService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> {
                     log.warn("Login failed: User not found with username {}", request.getUsername());
-                    return new InvalidCredentialsException("Invalid username or password");
+                    return new NotFoundException("User Not Found with username: " + request.getUsername());
                 });
 
         if (!user.getPassword().equals(request.getPassword())) {
@@ -146,7 +146,7 @@ public class UserServiceImpl implements IUserService {
      }
     private User createUserEntity(CreateUserRequest request) {
         log.info("Creating user with Name : {}", request.getFirstName()+" "+request.getLastName());
-        User user = USER_MAPPER.createUser(request);
+        User user = userMapper.createUser(request);
         user.setUsername(credentialGenerator.generateUsername(request.getFirstName(), request.getLastName(),userRepository.findAll()));
         user.setPassword(credentialGenerator.generateRandomPassword());
         User savedUser = userRepository.save(user);
