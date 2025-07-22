@@ -95,6 +95,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
+    @Transactional
     public TraineeDto createTrainee(CreateTraineeRequest request) {
         log.info("Creating User for Trainee: {} {}", request.getFirstName(), request.getLastName());
 
@@ -110,6 +111,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
+    @Transactional
     public TrainerDto createTrainer(CreateTrainerRequest request) {
         log.info("Creating User for Trainer: {} {}", request.getFirstName(), request.getLastName());
 

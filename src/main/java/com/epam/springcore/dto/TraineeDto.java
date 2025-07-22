@@ -9,6 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class TraineeDto {
+    private Long id;
     private String address;
     private LocalDate dateOfBirth;
     private UserDto user;

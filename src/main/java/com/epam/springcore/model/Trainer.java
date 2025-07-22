@@ -27,7 +27,7 @@ public class Trainer {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToMany(mappedBy = "trainers")
+    @ManyToMany(mappedBy = "trainers",fetch = FetchType.EAGER)
     private List<Trainee> trainees;
 
     @OneToMany(mappedBy = "trainer", cascade = CascadeType.ALL, orphanRemoval = true)

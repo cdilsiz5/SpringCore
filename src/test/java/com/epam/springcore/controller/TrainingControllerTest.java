@@ -1,9 +1,7 @@
 package com.epam.springcore.controller;
 
-import com.epam.springcore.dto.TraineeDto;
-import com.epam.springcore.dto.TrainerDto;
+
 import com.epam.springcore.dto.TrainingDto;
-import com.epam.springcore.dto.UserDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
 import com.epam.springcore.request.training.CreateTrainingRequest;
@@ -50,7 +48,7 @@ public class TrainingControllerTest {
     @Test
     @DisplayName("POST /trainings - Success")
     void testCreateTraining_success() throws Exception {
-        CreateTrainingRequest request = new CreateTrainingRequest("1", "2", "2025-07-01", "CARDIO", 30);
+        CreateTrainingRequest request = new CreateTrainingRequest(1L, 2L, "2025-07-01", 2L, 30);
         TrainingDto responseDto = TrainingDto.builder().id(1L).duration(30).build();
 
         when(trainingService.createTraining(any(CreateTrainingRequest.class))).thenReturn(responseDto);
@@ -108,7 +106,7 @@ public class TrainingControllerTest {
     @Test
     @DisplayName("PUT /trainings/{id} - Update Success")
     void testUpdateTraining_success() throws Exception {
-        UpdateTrainingRequest request = new UpdateTrainingRequest("1", "2", "2025-08-01", "CARDIO", 45);
+        UpdateTrainingRequest request = new UpdateTrainingRequest("1", "2", "2025-08-01", 2L, 45);
         TrainingDto dto = TrainingDto.builder().id(1L).duration(45).build();
 
         when(trainingService.updateTraining(eq(1L), any(UpdateTrainingRequest.class))).thenReturn(dto);
@@ -123,7 +121,7 @@ public class TrainingControllerTest {
     @Test
     @DisplayName("PUT /trainings/{id} - Not Found")
     void testUpdateTraining_notFound() throws Exception {
-        UpdateTrainingRequest request = new UpdateTrainingRequest("1", "2", "2025-08-01", "CARDIO", 45);
+        UpdateTrainingRequest request = new UpdateTrainingRequest("1", "2", "2025-08-01", 2L, 45);
 
         when(trainingService.updateTraining(eq(99L), any(UpdateTrainingRequest.class)))
                 .thenThrow(new NotFoundException("Training not found"));

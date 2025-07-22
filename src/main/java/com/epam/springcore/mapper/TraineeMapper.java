@@ -11,7 +11,6 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface TraineeMapper {
 
-    TraineeMapper TRAINEE_MAPPER = Mappers.getMapper(TraineeMapper.class);
 
     TraineeDto toTraineeDto(Trainee trainee);
 

@@ -11,19 +11,23 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreateTrainingRequest {
 
-    @NotBlank(message = "Trainee ID cannot be blank")
-    private String traineeId;
+    @Min(value = 1, message = "Trainee Id must be at 1")
+    @NotNull(message = "Trainee Id duration cannot be null")
+    private Long traineeId;
 
-    @NotBlank(message = "Trainer ID cannot be blank")
-    private String trainerId;
+    @Min(value = 1, message = "Trainee Id must be at 1")
+    @NotNull(message = "Trainee Id duration cannot be null")
+    private Long trainerId;
 
     @NotBlank(message = "Training date cannot be blank")
     private String date;
 
-    @NotBlank(message = "Training type cannot be blank")
-    private String type;
+    @Min(value = 1, message = "Training type must be at least 1")
+    @NotNull(message = "Training type cannot be null")
+    private Long type;
 
     @Min(value = 1, message = "Training duration must be at least 1 minute")
+    @NotNull(message = "Training duration cannot be null")
     private Integer durationMinutes;
 
 

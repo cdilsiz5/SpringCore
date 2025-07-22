@@ -4,9 +4,11 @@ import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.mapper.TrainingMapper;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.Trainer;
+import com.epam.springcore.model.TrainingType;
 import com.epam.springcore.repository.TrainingRepository;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Training;
+import com.epam.springcore.repository.TrainingTypeRepository;
 import com.epam.springcore.request.training.CreateTrainingRequest;
 import com.epam.springcore.request.training.UpdateTrainingRequest;
 import com.epam.springcore.service.ITrainingService;
@@ -25,15 +27,16 @@ public class TrainingServiceImpl implements ITrainingService {
 
     private final TrainingRepository trainingRepository;
     private final TrainingMapper trainingMapper;
+    private final TrainingTypeRepository trainingTypeRepository;
 
     @Override
     public TrainingDto createTraining(CreateTrainingRequest request) {
         log.info("Creating training between trainerId={} and traineeId={}",
                 request.getTrainerId(), request.getTraineeId());
-
         Training training = trainingMapper.createTraining(request);
+        TrainingType trainingType=trainingTypeRepository.findById(request.getType()).orElseThrow(() -> new NotFoundException("Training type not found"));
+        training.setTrainingType(trainingType);
         Training savedTraining = trainingRepository.save(training);
-
         log.info("Training created with ID: {}", savedTraining.getId());
         return trainingMapper.toTrainingDto(savedTraining);
     }

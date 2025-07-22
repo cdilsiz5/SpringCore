@@ -13,7 +13,6 @@ import java.util.List;
 
 public interface TrainingMapper {
 
-    TrainingMapper TRAINING_MAPPER = Mappers.getMapper(TrainingMapper.class);
 
     TrainingDto toTrainingDto(Training training);
 

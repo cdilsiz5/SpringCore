@@ -6,14 +6,10 @@ import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
-
 import java.util.List;
 @Mapper(componentModel = "spring")
 
 public interface TrainerMapper {
-
-  TrainerMapper TRAINER_MAPPER = Mappers.getMapper(TrainerMapper.class);
 
   TrainerDto toTrainerDto(Trainer trainer);
 

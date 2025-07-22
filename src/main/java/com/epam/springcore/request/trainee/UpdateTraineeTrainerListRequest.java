@@ -12,6 +12,5 @@ package com.epam.springcore.request.trainee;
  @Builder
 public class UpdateTraineeTrainerListRequest {
 
-    private Long TraineeId;
-    private List<Long> trainerIds;
+     private List<Long> trainerIds;
 }

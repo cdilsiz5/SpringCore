@@ -33,6 +33,7 @@ public class TraineeServiceImpl implements ITraineeService {
     private final ITrainerService trainerService;
     private final ITrainingService trainingService;
     private final TraineeMapper traineeMapper;
+
     @Override
     public TraineeDto createTraineeEntity(User user, LocalDate dob, String address) {
         log.info("Creating trainee entity with dob: {}, address: {}", dob, address);

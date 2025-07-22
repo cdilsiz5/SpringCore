@@ -1,7 +1,6 @@
-package com.epam.springcore.request.trainer;
+package com.epam.springcore.dto;
 
 import com.epam.springcore.model.enums.Specialization;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,8 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UpdateTrainerRequest {
-
-    @NotNull(message = "Specialty must be specified")
+public class TrainingTypeDto {
+    private int id;
     private Specialization specialization;
 }

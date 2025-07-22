@@ -100,7 +100,7 @@ public class TrainerControllerTest {
     @DisplayName("PUT /trainers/{username} - Success")
     void testUpdateTrainer_success() throws Exception {
         UpdateTrainerRequest request = new UpdateTrainerRequest();
-        request.setSpecialty(Specialization.CARDIO);
+        request.setSpecialization(Specialization.CARDIO);
 
         mockTrainer.setSpecialization("CARDIO");
 
@@ -118,7 +118,7 @@ public class TrainerControllerTest {
     @DisplayName("PUT /trainers/{username} - Not Found")
     void testUpdateTrainer_notFound() throws Exception {
         UpdateTrainerRequest request = new UpdateTrainerRequest();
-        request.setSpecialty(Specialization.CARDIO);
+        request.setSpecialization(Specialization.CARDIO);
 
         when(trainerService.updateTrainer(eq("notfound"), any(UpdateTrainerRequest.class)))
                 .thenThrow(new NotFoundException("Trainer not found"));

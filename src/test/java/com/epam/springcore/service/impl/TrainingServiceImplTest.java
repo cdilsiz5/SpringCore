@@ -1,12 +1,15 @@
 package com.epam.springcore.service.impl;
 
 import com.epam.springcore.dto.TrainingDto;
+import com.epam.springcore.dto.TrainingTypeDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.mapper.TrainingMapper;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.Training;
+import com.epam.springcore.model.TrainingType;
 import com.epam.springcore.repository.TrainingRepository;
+import com.epam.springcore.repository.TrainingTypeRepository;
 import com.epam.springcore.request.training.CreateTrainingRequest;
 import com.epam.springcore.request.training.UpdateTrainingRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +32,9 @@ class TrainingServiceImplTest {
     @Mock
     private TrainingMapper trainingMapper;
 
+    @Mock
+    private TrainingTypeRepository trainingTypeRepository;
+
     @InjectMocks
     private TrainingServiceImpl trainingService;
 
@@ -44,11 +50,12 @@ class TrainingServiceImplTest {
         Training training = new Training();
         Training saved = new Training();
         TrainingDto dto = new TrainingDto();
+        TrainingType trainingType = new TrainingType();
 
         when(trainingMapper.createTraining(request)).thenReturn(training);
         when(trainingRepository.save(training)).thenReturn(saved);
         when(trainingMapper.toTrainingDto(saved)).thenReturn(dto);
-
+        when(trainingTypeRepository.findById(request.getType())).thenReturn(Optional.of(trainingType));
         TrainingDto result = trainingService.createTraining(request);
 
         assertNotNull(result);
