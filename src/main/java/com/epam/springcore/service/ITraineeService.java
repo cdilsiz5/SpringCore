@@ -1,86 +1,105 @@
 package com.epam.springcore.service;
 
 import com.epam.springcore.dto.TraineeDto;
-import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
+import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.User;
 import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
-import com.epam.springcore.request.trainee.UpdateTraineeTrainerListRequest;
 
 import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Service interface for managing Trainee entities and related operations.
+ * Service interface for managing Trainee operations.
  */
 public interface ITraineeService {
 
     /**
-     * Creates a new trainee with the provided data.
+     * Creates a new trainee along with the corresponding user.
      *
-     * @param  user,dob,address the request containing trainee information
-     * @return the created trainee as a DTO
+     * @param request the trainee creation request
+     * @return the created trainee DTO
      */
-    TraineeDto createTraineeEntity(User user, LocalDate dob, String address);
+    TraineeDto createTrainee(CreateTraineeRequest request);
 
     /**
-     * Retrieves a trainee by their username.
+     * Retrieves a specific trainee by their username.
      *
-     * @param username the trainee's username
-     * @return the corresponding TraineeDto
+     * @param authUsername authenticated username
+     * @param authPassword authenticated password
+     * @param username      the username of the trainee to retrieve
+     * @return the trainee DTO
      */
-    TraineeDto getTraineeByUsername(String username);
+    TraineeDto getTraineeByUsername(String authUsername, String authPassword, String username);
 
     /**
-     * Returns a list of all trainees in the system.
+     * Retrieves all trainees in the system.
      *
-     * @return a list of TraineeDto objects
+     * @param authUsername authenticated username
+     * @param authPassword authenticated password
+     * @return a list of all trainee DTOs
      */
-    List<TraineeDto> getAllTrainees();
+    List<TraineeDto> getAllTrainees(String authUsername, String authPassword);
 
     /**
-     * Updates an existing trainee’s information.
+     * Updates the information of an existing trainee.
      *
-     * @param username the trainee’s username to update
-     * @param request  the update request with new data
-     * @return the updated TraineeDto
+     * @param authUsername authenticated username
+     * @param authPassword authenticated password
+     * @param username      the username of the trainee to update
+     * @param request       the update request payload
+     * @return the updated trainee DTO
      */
-    TraineeDto updateTrainee(String username, UpdateTraineeRequest request);
+    TraineeDto updateTrainee(String authUsername, String authPassword, String username, UpdateTraineeRequest request);
 
     /**
      * Deletes a trainee by their username.
      *
-     * @param username the username of the trainee to delete
+     * @param authUsername authenticated username
+     * @param authPassword authenticated password
+     * @param username      the username of the trainee to delete
      */
-    void deleteTrainee(String username);
-
-
-    /**
-     * Updates the list of trainers assigned to a trainee.
-     *
-     * @param username the username of the trainee
-     * @param request  the request containing new trainer list
-     * @return the updated TraineeDto
-     */
-    TraineeDto updateTrainerList(String username, UpdateTraineeTrainerListRequest request);
+    void deleteTrainee(String authUsername, String authPassword, String username);
 
     /**
-     * Retrieves training history of a trainee with optional filters.
+     * Toggles activation status of a trainee's user account.
      *
-     * @param username     the trainee username
-     * @param from         start date (optional)
-     * @param to           end date (optional)
-     * @param trainerName  trainer name filter (optional)
-     * @param trainingType training type filter (optional)
-     * @return list of matching training TraineeDto sessions
+     * @param authUsername authenticated username
+     * @param authPassword authenticated password
+     * @param username      the username of the trainee to toggle activation for
      */
-    List<TrainingDto> getTrainingHistory(String username, String from, String to, String trainerName, String trainerLastname, String trainingType);
+    void toggleActivation(String authUsername, String authPassword, String username);
+
     /**
-     * Returns trainers not currently assigned to the trainee.
+     * Retrieves the training history for a trainee with optional filters.
      *
-     * @param username the trainee's username
-     * @return list of unassigned trainer TraineeDto's.
+     * @param authUsername     authenticated username
+     * @param authPassword     authenticated password
+     * @param username         the trainee's username
+     * @param from             optional start date
+     * @param to               optional end date
+     * @param trainerName      optional trainer first name filter
+     * @param trainerLastName  optional trainer last name filter
+     * @return list of training DTOs matching the filter
      */
-    List<TrainerDto> getUnassignedTrainers(String username);
+    List<TrainingDto> getTrainingHistory(String authUsername, String authPassword, String username,
+                                         LocalDate from, LocalDate to,
+                                         String trainerName, String trainerLastName);
+
+    /**
+     * Creates a new Trainee entity from an existing User entity.
+     *
+     * @param user the user entity to associate with the new trainee
+     * @return the created trainee DTO
+     */
+    TraineeDto createTraineeEntity(User user);
+
+    /**
+     * Fetches the trainee entity by its ID.
+     *
+     * @param traineeId the ID of the trainee
+     * @return the Trainee entity
+     */
+    Trainee getTraineeById(Long traineeId);
 }

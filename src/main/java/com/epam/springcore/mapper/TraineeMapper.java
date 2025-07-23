@@ -5,7 +5,6 @@ import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 @Mapper(componentModel = "spring")

@@ -3,7 +3,7 @@ package com.epam.springcore.controller;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.request.training.CreateTrainingRequest;
 import com.epam.springcore.request.training.UpdateTrainingRequest;
-import com.epam.springcore.service.ITrainingService;
+import com.epam.springcore.service.impl.TrainingServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,15 +20,12 @@ import java.util.List;
 import static com.epam.springcore.constants.Constant.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping(API_PREFIX +API_EPAM+API_VERSION_V1 + API_TRAINING)
 @Tag(name = "Training Resource", description = "SpringCore REST APIs for Trainings")
 public class TrainingController {
 
-    private final ITrainingService trainingService;
-
-    public TrainingController(ITrainingService trainingService) {
-        this.trainingService = trainingService;
-    }
+    private final TrainingServiceImpl trainingService;
 
     @Operation(summary = "Create Training", description = "Create a new Training")
     @ApiResponses(

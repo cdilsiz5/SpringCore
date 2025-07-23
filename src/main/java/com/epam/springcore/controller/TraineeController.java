@@ -1,22 +1,19 @@
 package com.epam.springcore.controller;
 
 import com.epam.springcore.dto.TraineeDto;
-import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
+import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
-import com.epam.springcore.request.trainee.UpdateTraineeTrainerListRequest;
 import com.epam.springcore.service.ITraineeService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -25,105 +22,112 @@ import java.util.List;
 import static com.epam.springcore.constants.Constant.*;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping(API_PREFIX + API_EPAM + API_VERSION_V1 + API_TRAINEE)
-@Tag(name = "Trainee Resource", description = "SpringCore REST APIs for Trainees")
+@RequiredArgsConstructor
+@Tag(name = "Trainee Controller", description = "Endpoints for managing trainees")
 public class TraineeController {
 
     private final ITraineeService traineeService;
 
-    @Operation(summary = "Get trainee by username", description = "Fetch a trainee by username")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = TraineeDto.class))))
+    @Operation(summary = "Create new trainee", description = "Public endpoint. Creates a new trainee and generates credentials.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainee created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content)
+    })
+    @PostMapping
+    public ResponseEntity<TraineeDto> createTrainee(@RequestBody @Valid CreateTraineeRequest request) {
+        return ResponseEntity.ok(traineeService.createTrainee(request));
+    }
+
+    @Operation(summary = "Get trainee by username", description = "Authenticated endpoint. Retrieves a specific trainee by username.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainee fetched successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found")
+    })
     @GetMapping("/{username}")
-    @ResponseStatus(HttpStatus.OK)
-    public TraineeDto getTraineeByUsername(@PathVariable String username) {
-        return traineeService.getTraineeByUsername(username);
+    public ResponseEntity<TraineeDto> getTraineeByUsername(
+            @RequestHeader("authUsername") String authUsername,
+            @RequestHeader("authPassword") String authPassword,
+            @PathVariable String username) {
+        return ResponseEntity.ok(traineeService.getTraineeByUsername(authUsername,authPassword,username));
     }
 
-    @Operation(summary = "Get all trainees", description = "Retrieve all trainees")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = TraineeDto.class))))
+    @Operation(summary = "Get all trainees", description = "Authenticated endpoint. Retrieves all trainees.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainees fetched successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<TraineeDto> getAllTrainees() {
-        return traineeService.getAllTrainees();
+    public ResponseEntity<List<TraineeDto>> getAllTrainees(
+            @RequestHeader("authUsername") String authUsername,
+            @RequestHeader("authPassword") String authPassword) {
+        return ResponseEntity.ok(traineeService.getAllTrainees(authUsername, authPassword));
     }
 
-    @Operation(summary = "Update trainee", description = "Update trainee details by username")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = TraineeDto.class))))
+    @Operation(summary = "Update trainee", description = "Authenticated endpoint. Updates trainee's information.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainee updated successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found")
+    })
     @PutMapping("/{username}")
-    @ResponseStatus(HttpStatus.OK)
-    public TraineeDto updateTrainee(@PathVariable String username,
-                                    @RequestBody @Valid UpdateTraineeRequest request) {
-        return traineeService.updateTrainee(username, request);
-    }
-
-    @Operation(summary = "Delete trainee", description = "Delete trainee by username")
-    @ApiResponses(@ApiResponse(responseCode = "204", description = "No Content"))
-    @DeleteMapping("/{username}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTrainee(@PathVariable String username) {
-        traineeService.deleteTrainee(username);
-    }
-
-    @Operation(summary = "Update assigned trainers", description = "Update list of trainers assigned to a trainee")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = TraineeDto.class))))
-    @PutMapping("/{username}/trainers")
-    @ResponseStatus(HttpStatus.OK)
-    public TraineeDto updateTrainerList(@PathVariable String username,
-                                        @RequestBody @Valid UpdateTraineeTrainerListRequest request) {
-        return traineeService.updateTrainerList(username, request);
-    }
-
-    @Operation(summary = "Get training history", description = "Get training history for a trainee with optional filters")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = TrainingDto.class))))
-    @GetMapping("/{username}/trainings")
-    @ResponseStatus(HttpStatus.OK)
-    public List<TrainingDto> getTrainingHistory(
+    public ResponseEntity<TraineeDto> updateTrainee(
+            @RequestHeader("authUsername") String authUsername,
+            @RequestHeader("authPassword") String authPassword,
             @PathVariable String username,
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            @Parameter(description = "Start date (yyyy-MM-dd)", example = "2024-01-01")
-            LocalDate from,
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            @Parameter(description = "End date (yyyy-MM-dd)", example = "2024-12-31")
-            LocalDate to,
-            @RequestParam(required = false)
-            @Parameter(description = "Trainer First Name", example = "Ayşe")
-            String trainerName,
-            @RequestParam(required = false)
-            @Parameter(description = "Trainer Last Name", example = "Yılmaz")
-            String trainerLastname,
-            @RequestParam(required = false)
-            @Parameter(description = "Training Type", example = "CARDIO")
-            String trainingType
-    ) {
-        return traineeService.getTrainingHistory(username,
-                from != null ? from.toString() : null,
-                to != null ? to.toString() : null,
-                trainerName,
-                trainerLastname,
-                trainingType
-        );
+            @RequestBody @Valid UpdateTraineeRequest request) {
+        return ResponseEntity.ok(traineeService.updateTrainee(authUsername, authPassword,username, request));
     }
 
-    @Operation(summary = "Get unassigned trainers", description = "List trainers not assigned to the trainee ")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = TrainerDto.class))))
-    @GetMapping("/{username}/unassigned-trainers")
-    @ResponseStatus(HttpStatus.OK)
-    public List<TrainerDto> getUnassignedTrainers(@PathVariable String username) {
-        return traineeService.getUnassignedTrainers(username);
+    @Operation(summary = "Delete trainee", description = "Authenticated endpoint. Deletes the trainee account.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainee deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found")
+    })
+    @DeleteMapping("/{username}")
+    public ResponseEntity<Void> deleteTrainee(
+            @RequestHeader("authUsername") String authUsername,
+            @RequestHeader("authPassword") String authPassword,
+            @PathVariable String username) {
+        traineeService.deleteTrainee(authUsername,authPassword,username);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Toggle trainee activation", description = "Authenticated endpoint. Toggles trainee's active status.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Activation status toggled"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found")
+    })
+    @PatchMapping("/{username}/toggle-activation")
+    public ResponseEntity<Void> toggleTraineeActivation(
+            @RequestHeader("authUsername") String authUsername,
+            @RequestHeader("authPassword") String authPassword,
+            @PathVariable String username) {
+        traineeService.toggleActivation(authUsername, authPassword,username);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Get training history", description = "Authenticated endpoint. Retrieves trainee's training history with optional filters.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Training history fetched"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found")
+    })
+    @GetMapping("/{username}/training-history")
+    public ResponseEntity<List<TrainingDto>> getTrainingHistory(
+            @RequestHeader("authUsername") String authUsername,
+            @RequestHeader("authPassword") String authPassword,
+            @PathVariable String username,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String trainerName,
+            @RequestParam(required = false) String trainerLastName) {
+
+        return ResponseEntity.ok(
+                traineeService.getTrainingHistory(username, authPassword,username, from, to, trainerName, trainerLastName)
+        );
     }
 }

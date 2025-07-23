@@ -1,7 +1,6 @@
 package com.epam.springcore.exception.handler;
 
 import com.epam.springcore.exception.ApiException;
-import com.epam.springcore.exception.ValidationException;
 import com.epam.springcore.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,19 +29,23 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ValidationException> handleValidationException(MethodArgumentNotValidException exception) {
+    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException exception) {
         Map<String, String> validationErrors = new HashMap<>();
         for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
             validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        ValidationException errorResponse = ValidationException.builder()
+
+        Map<String, Object> details = new HashMap<>();
+        details.put("validationErrors", validationErrors);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .message("Validation failed")
                 .exceptionType(exception.getClass().getSimpleName())
-                .validationErrors(validationErrors)
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .errorTime(LocalDateTime.now())
+                .details(details)
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
-
 }

@@ -1,6 +1,5 @@
 package com.epam.springcore.model;
 
-import com.epam.springcore.model.enums.Specialization;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

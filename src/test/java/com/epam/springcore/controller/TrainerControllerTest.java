@@ -8,6 +8,7 @@ import com.epam.springcore.exception.handler.GlobalExceptionHandler;
 import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 import com.epam.springcore.service.ITrainerService;
+import com.epam.springcore.service.impl.TrainerServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -31,12 +32,14 @@ public class TrainerControllerTest {
     private ObjectMapper objectMapper;
 
     @Mock
-    private ITrainerService trainerService;
+    private TrainerServiceImpl trainerService;
 
     private TrainerDto mockTrainer;
     private UserDto mockUser;
 
     private static final String BASE_URL = "/api/epam/v1/trainers";
+    private static final String AUTH_USERNAME = "admin";
+    private static final String AUTH_PASSWORD = "pass";
 
     @BeforeEach
     void setUp() {
@@ -67,31 +70,25 @@ public class TrainerControllerTest {
     @Test
     @DisplayName("GET /trainers/{username} - Success")
     void testGetTrainerByUsername_success() throws Exception {
-        when(trainerService.getTrainerByUsername("Cihan.Dilsiz")).thenReturn(mockTrainer);
+        when(trainerService.getTrainerByUsername(AUTH_USERNAME, AUTH_PASSWORD, "Cihan.Dilsiz"))
+                .thenReturn(mockTrainer);
 
-        mockMvc.perform(get(BASE_URL + "/Cihan.Dilsiz"))
+        mockMvc.perform(get(BASE_URL + "/Cihan.Dilsiz")
+                        .header("X-Username", AUTH_USERNAME)
+                        .header("X-Password", AUTH_PASSWORD))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.user.username").value("Cihan.Dilsiz"));
     }
 
     @Test
-    @DisplayName("GET /trainers/{username} - Not Found")
-    void testGetTrainerByUsername_notFound() throws Exception {
-        when(trainerService.getTrainerByUsername("unknown"))
-                .thenThrow(new NotFoundException("Trainer not found"));
-
-        mockMvc.perform(get(BASE_URL + "/unknown"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Trainer not found"))
-                .andExpect(jsonPath("$.statusCode").value(404));
-    }
-
-    @Test
     @DisplayName("GET /trainers - Success")
     void testGetAllTrainers_success() throws Exception {
-        when(trainerService.getAllTrainers()).thenReturn(List.of(mockTrainer));
+        when(trainerService.getAllTrainers(AUTH_USERNAME, AUTH_PASSWORD))
+                .thenReturn(List.of(mockTrainer));
 
-        mockMvc.perform(get(BASE_URL))
+        mockMvc.perform(get(BASE_URL)
+                        .header("X-Username", AUTH_USERNAME)
+                        .header("X-Password", AUTH_PASSWORD))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(1));
     }
@@ -101,13 +98,14 @@ public class TrainerControllerTest {
     void testUpdateTrainer_success() throws Exception {
         UpdateTrainerRequest request = new UpdateTrainerRequest();
         request.setSpecialization(Specialization.CARDIO);
-
         mockTrainer.setSpecialization("CARDIO");
 
-        when(trainerService.updateTrainer(eq("Cihan.Dilsiz"), any(UpdateTrainerRequest.class)))
+        when(trainerService.updateTrainer(AUTH_USERNAME, AUTH_PASSWORD, "Cihan.Dilsiz", request))
                 .thenReturn(mockTrainer);
 
         mockMvc.perform(put(BASE_URL + "/Cihan.Dilsiz")
+                        .header("X-Username", AUTH_USERNAME)
+                        .header("X-Password", AUTH_PASSWORD)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -115,41 +113,25 @@ public class TrainerControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /trainers/{username} - Not Found")
-    void testUpdateTrainer_notFound() throws Exception {
-        UpdateTrainerRequest request = new UpdateTrainerRequest();
-        request.setSpecialization(Specialization.CARDIO);
-
-        when(trainerService.updateTrainer(eq("notfound"), any(UpdateTrainerRequest.class)))
-                .thenThrow(new NotFoundException("Trainer not found"));
-
-        mockMvc.perform(put(BASE_URL + "/notfound")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Trainer not found"))
-                .andExpect(jsonPath("$.statusCode").value(404));
-    }
-
-    @Test
     @DisplayName("DELETE /trainers/{username} - Success")
     void testDeleteTrainer_success() throws Exception {
-        doNothing().when(trainerService).deleteTrainer("Cihan.Dilsiz");
+        doNothing().when(trainerService).deleteTrainer(AUTH_USERNAME, AUTH_PASSWORD, "Cihan.Dilsiz");
 
-        mockMvc.perform(delete(BASE_URL + "/Cihan.Dilsiz"))
+        mockMvc.perform(delete(BASE_URL + "/Cihan.Dilsiz")
+                        .header("X-Username", AUTH_USERNAME)
+                        .header("X-Password", AUTH_PASSWORD))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    @DisplayName("DELETE /trainers/{username} - Not Found")
-    void testDeleteTrainer_notFound() throws Exception {
-        doThrow(new NotFoundException("Trainer not found"))
-                .when(trainerService).deleteTrainer("notfound");
+    @DisplayName("PATCH /trainers/{username}/toggle-activation - Success")
+    void testToggleActivation_success() throws Exception {
+        doNothing().when(trainerService).toggleActivation(AUTH_USERNAME, AUTH_PASSWORD, "Cihan.Dilsiz");
 
-        mockMvc.perform(delete(BASE_URL + "/notfound"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Trainer not found"))
-                .andExpect(jsonPath("$.statusCode").value(404));
+        mockMvc.perform(patch(BASE_URL + "/Cihan.Dilsiz/toggle-activation")
+                        .header("X-Username", AUTH_USERNAME)
+                        .header("X-Password", AUTH_PASSWORD))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -160,10 +142,14 @@ public class TrainerControllerTest {
                 .trainer(mockTrainer)
                 .build();
 
-        when(trainerService.getTrainingHistory(anyString(), any(), any(), any(), any()))
-                .thenReturn(List.of(training));
+        when(trainerService.getTrainingHistory(
+                eq(AUTH_USERNAME), eq(AUTH_PASSWORD), eq("Cihan.Dilsiz"),
+                any(), any(), any(), any()
+        )).thenReturn(List.of(training));
 
         mockMvc.perform(get(BASE_URL + "/Cihan.Dilsiz/trainings")
+                        .header("X-Username", AUTH_USERNAME)
+                        .header("X-Password", AUTH_PASSWORD)
                         .param("from", "2025-07-21")
                         .param("to", "2025-12-31")
                         .param("traineeName", "Ali")

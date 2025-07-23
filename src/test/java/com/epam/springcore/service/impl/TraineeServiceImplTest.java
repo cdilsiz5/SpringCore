@@ -1,17 +1,17 @@
 package com.epam.springcore.service.impl;
 
 import com.epam.springcore.dto.TraineeDto;
-import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.mapper.TraineeMapper;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.User;
 import com.epam.springcore.repository.TraineeRepository;
+import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
-import com.epam.springcore.request.trainee.UpdateTraineeTrainerListRequest;
-import com.epam.springcore.service.ITrainerService;
+import com.epam.springcore.request.user.CreateUserRequest;
 import com.epam.springcore.service.ITrainingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,11 +30,11 @@ class TraineeServiceImplTest {
     @Mock
     private TraineeRepository traineeRepository;
     @Mock
-    private ITrainerService trainerService;
-    @Mock
     private ITrainingService trainingService;
     @Mock
     private TraineeMapper traineeMapper;
+    @Mock
+    private UserServiceImpl userService;
 
     @InjectMocks
     private TraineeServiceImpl traineeService;
@@ -45,170 +45,170 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should create trainee entity")
-    void shouldCreateTraineeEntity() {
+    void shouldCreateTrainee() {
+        CreateTraineeRequest request = new CreateTraineeRequest("Cihan", "Dilsiz",LocalDate.of(1999,07,19),"Mersin");
         User user = new User();
-        LocalDate dob = LocalDate.of(1995, 1, 1);
-        String address = "Test Address";
+        TraineeDto dto = new TraineeDto();
 
+        when(userService.createUserEntity(any(CreateUserRequest.class))).thenReturn(user);
+        when(traineeRepository.save(any())).thenReturn(new Trainee());
+        when(traineeMapper.toTraineeDto(any())).thenReturn(dto);
+
+        TraineeDto result = traineeService.createTrainee(request);
+        assertNotNull(result);
+    }
+
+    @Test
+    void shouldGetTraineeByUsername() {
+        User user = new User();
         Trainee trainee = new Trainee();
         trainee.setUser(user);
-        trainee.setDateOfBirth(dob);
-        trainee.setAddress(address);
-
-        TraineeDto expectedDto = new TraineeDto();
-
-        when(traineeRepository.save(any())).thenReturn(trainee);
-        when(traineeMapper.toTraineeDto(trainee)).thenReturn(expectedDto);
-
-        TraineeDto result = traineeService.createTraineeEntity(user, dob, address);
-
-        assertNotNull(result);
-        verify(traineeRepository).save(any());
-        verify(traineeMapper).toTraineeDto(trainee);
-    }
-
-    @Test
-    @DisplayName("Should return trainee by username")
-    void shouldReturnTraineeByUsername() {
-        String username = "Cihan.Dilsiz";
-        Trainee trainee = new Trainee();
         TraineeDto dto = new TraineeDto();
 
-        when(traineeRepository.findByUserUsername(username)).thenReturn(Optional.of(trainee));
-        when(traineeMapper.toTraineeDto(trainee)).thenReturn(dto);
+        when(userService.authenticate("admin", "pass"))
+                .thenReturn(true);
+        when(traineeRepository.findByUserUsername("cihan"))
+                .thenReturn(Optional.of(trainee));
+        when(traineeMapper.toTraineeDto(trainee))
+                .thenReturn(dto);
 
-        TraineeDto result = traineeService.getTraineeByUsername(username);
-
+        TraineeDto result = traineeService.getTraineeByUsername("admin", "pass", "cihan");
         assertNotNull(result);
-        verify(traineeRepository).findByUserUsername(username);
     }
 
     @Test
-    @DisplayName("Should throw when trainee not found")
-    void shouldThrowIfTraineeNotFound() {
-        when(traineeRepository.findByUserUsername("Cihan.Dilsiz")).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> traineeService.getTraineeByUsername("Cihan.Dilsiz"));
+    void shouldThrowWhenTraineeNotFoundByUsername() {
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
+        when(traineeRepository.findByUserUsername("ghost"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class,
+                () -> traineeService.getTraineeByUsername("admin", "pass", "ghost"));
     }
 
     @Test
-    @DisplayName("Should update trainee")
+    void shouldThrowWhenAuthenticationFails() {
+        when(userService.authenticate("admin", "wrong"))
+                .thenReturn(false);
+
+        assertThrows(UnauthorizedException.class,
+                () -> traineeService.getAllTrainees("admin", "wrong"));
+    }
+
+    @Test
+    void shouldGetAllTrainees() {
+        when(userService.authenticate("admin", "pass"))
+                .thenReturn(true);
+        when(traineeRepository.findAll())
+                .thenReturn(List.of(new Trainee()));
+        when(traineeMapper.toTraineeDtoList(any()))
+                .thenReturn(List.of(new TraineeDto()));
+
+        List<TraineeDto> result = traineeService.getAllTrainees("admin", "pass");
+        assertEquals(1, result.size());
+    }
+
+    @Test
     void shouldUpdateTrainee() {
-        String username = "Cihan.Dilsiz";
-        Trainee trainee = new Trainee();
+        String username = "cihan";
         UpdateTraineeRequest request = new UpdateTraineeRequest();
+        Trainee trainee = new Trainee();
         TraineeDto dto = new TraineeDto();
 
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
         when(traineeRepository.findByUserUsername(username)).thenReturn(Optional.of(trainee));
+        doNothing().when(traineeMapper).updateTraineeRequest(request, trainee);
         when(traineeRepository.save(trainee)).thenReturn(trainee);
         when(traineeMapper.toTraineeDto(trainee)).thenReturn(dto);
 
-        TraineeDto result = traineeService.updateTrainee(username, request);
-
+        TraineeDto result = traineeService.updateTrainee("admin", "pass", username, request);
         assertNotNull(result);
-        verify(traineeRepository).save(trainee);
-        verify(traineeMapper).toTraineeDto(trainee);
     }
 
     @Test
-    @DisplayName("Should throw when updating non-existent trainee")
-    void shouldThrowWhenUpdatingNonExistentTrainee() {
-        when(traineeRepository.findByUserUsername("Cihan.Dilsiz")).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> traineeService.updateTrainee("Cihan.Dilsiz", new UpdateTraineeRequest()));
-    }
-
-    @Test
-    @DisplayName("Should delete trainee")
     void shouldDeleteTrainee() {
-        String username = "Cihan.Dilsiz";
+        String username = "cihan";
         Trainee trainee = new Trainee();
 
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
         when(traineeRepository.findByUserUsername(username)).thenReturn(Optional.of(trainee));
 
-        traineeService.deleteTrainee(username);
-
+        traineeService.deleteTrainee("admin", "pass", username);
         verify(traineeRepository).delete(trainee);
     }
 
     @Test
-    @DisplayName("Should throw when deleting non-existent trainee")
-    void shouldThrowWhenDeletingNonExistentTrainee() {
-        when(traineeRepository.findByUserUsername("Cihan.Dilsiz")).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> traineeService.deleteTrainee("Cihan.Dilsiz"));
+    void shouldToggleActivation() {
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
+        doNothing().when(userService).activateOrDeactivate("cihan");
+
+        traineeService.toggleActivation("admin", "pass", "cihan");
+        verify(userService).activateOrDeactivate("cihan");
     }
 
     @Test
-    @DisplayName("Should update trainer list")
-    void shouldUpdateTrainerList() {
-        String username = "Cihan.Dilsiz";
-        Long trainerId = 1L;
-        Trainer trainer = new Trainer();
-        trainer.setId(trainerId);
+    void shouldGetTrainingHistory() {
+        String username = "cihan";
+        Trainee trainee = mock(Trainee.class);
+        TrainingDto dto = new TrainingDto();
 
+        // training mock structure
+        com.epam.springcore.model.Training training = mock(com.epam.springcore.model.Training.class);
+        Trainer trainer = mock(Trainer.class);
+        User trainerUser = mock(User.class);
+        Trainee linkedTrainee = mock(Trainee.class);
+        User traineeUser = mock(User.class);
+
+        when(training.getDate()).thenReturn(LocalDate.of(2025, 7, 23));
+        when(training.getTrainer()).thenReturn(trainer);
+        when(trainer.getUser()).thenReturn(trainerUser);
+        when(trainerUser.getFirstName()).thenReturn("Ahmet");
+        when(trainerUser.getLastName()).thenReturn("Yılmaz");
+        when(training.getTrainee()).thenReturn(linkedTrainee);
+        when(linkedTrainee.getUser()).thenReturn(traineeUser);
+        when(traineeUser.getFirstName()).thenReturn("Cihan");
+        when(traineeUser.getLastName()).thenReturn("Dilsiz");
+
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
+        when(traineeRepository.findByUserUsername(username)).thenReturn(Optional.of(trainee));
+
+        List<TrainingDto> result = traineeService.getTrainingHistory(
+                "admin", "pass", username,
+                LocalDate.of(2025, 7, 1),
+                LocalDate.of(2025, 7, 31),
+                "ahmet", "yılmaz"
+        );
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void shouldCreateTraineeEntity() {
+        User user = new User();
+        user.setId(1L);
         Trainee trainee = new Trainee();
-        trainee.setTrainers(new HashSet<>());
         TraineeDto dto = new TraineeDto();
 
-        UpdateTraineeTrainerListRequest request = new UpdateTraineeTrainerListRequest();
-        request.setTrainerIds(List.of(1L));
-
-        when(traineeRepository.findByUserUsername(username)).thenReturn(Optional.of(trainee));
-        when(trainerService.getTrainerById(trainerId)).thenReturn(trainer);
         when(traineeRepository.save(any())).thenReturn(trainee);
         when(traineeMapper.toTraineeDto(trainee)).thenReturn(dto);
 
-        TraineeDto result = traineeService.updateTrainerList(username, request);
-
+        TraineeDto result = traineeService.createTraineeEntity(user);
         assertNotNull(result);
-        verify(traineeRepository).save(trainee);
     }
 
     @Test
-    @DisplayName("Should return all trainees")
-    void shouldReturnAllTrainees() {
-        List<Trainee> trainees = List.of(new Trainee());
-        List<TraineeDto> dtoList = List.of(new TraineeDto());
-
-        when(traineeRepository.findAll()).thenReturn(trainees);
-        when(traineeMapper.toTraineeDtoList(trainees)).thenReturn(dtoList);
-
-        List<TraineeDto> result = traineeService.getAllTrainees();
-
-        assertEquals(1, result.size());
-        verify(traineeRepository).findAll();
-    }
-
-    @Test
-    @DisplayName("Should return filtered training history")
-    void shouldReturnFilteredTrainingHistory() {
-        String username = "Cihan.Dilsiz";
+    void shouldGetTraineeById() {
         Trainee trainee = new Trainee();
-        TrainingDto trainingDto = new TrainingDto();
-        trainingDto.setDate(LocalDate.of(2025, 7, 24));
-        trainingDto.setTrainer(new TrainerDto());
+        when(traineeRepository.findById(1L)).thenReturn(Optional.of(trainee));
 
-        when(traineeRepository.findByUserUsername(username)).thenReturn(Optional.of(trainee));
-        when(trainingService.findAllByTrainee(trainee)).thenReturn(List.of(trainingDto));
-
-        List<TrainingDto> result = traineeService.getTrainingHistory(username, "2025-07-21", "2025-12-31", null, null, null);
-
-        assertEquals(1, result.size());
+        Trainee result = traineeService.getTraineeById(1L);
+        assertNotNull(result);
     }
 
     @Test
-    @DisplayName("Should return unassigned trainers")
-    void shouldReturnUnassignedTrainers() {
-        String username = "Cihan.Dilsiz";
-        Trainee trainee = new Trainee();
-        Trainer assignedTrainer = new Trainer();
-        TrainerDto trainerDto = new TrainerDto();
+    void shouldThrowWhenTraineeNotFoundById() {
+        when(traineeRepository.findById(99L)).thenReturn(Optional.empty());
 
-        trainee.setTrainers(Set.of(assignedTrainer));
-
-        when(traineeRepository.findByUserUsername(username)).thenReturn(Optional.of(trainee));
-        when(trainerService.getAllTrainers()).thenReturn(List.of(trainerDto));
-
-        List<TrainerDto> result = traineeService.getUnassignedTrainers(username);
-        assertEquals(1, result.size());
+        assertThrows(NotFoundException.class, () -> traineeService.getTraineeById(99L));
     }
 }

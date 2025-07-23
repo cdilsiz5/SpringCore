@@ -2,9 +2,7 @@ package com.epam.springcore.exception;
 
 import org.springframework.http.HttpStatus;
 
-import java.io.Serializable;
-
-public class InvalidCredentialsException extends ApiException implements Serializable {
+public class InvalidCredentialsException extends ApiException {
     private static final long serialVersionUID = 1L;
 
     public InvalidCredentialsException(String message) {

@@ -1,94 +1,82 @@
 package com.epam.springcore.service;
 
-import com.epam.springcore.dto.TraineeDto;
-import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.UserDto;
 import com.epam.springcore.model.User;
-import com.epam.springcore.request.trainee.CreateTraineeRequest;
-import com.epam.springcore.request.trainer.CreateTrainerRequest;
+import com.epam.springcore.request.user.CreateUserRequest;
 import com.epam.springcore.request.user.UpdatePasswordRequest;
-import com.epam.springcore.request.user.LoginRequest;
 
 import java.util.List;
 
 /**
- * Service interface for managing User entities and authentication logic.
+ * Service interface for managing User entities and handling authentication logic.
  */
 public interface IUserService {
 
-
-
     /**
-     * Retrieves a user by username.
+     * Verifies the credentials of a user. Throws an exception if authentication fails.
      *
-     * @param username username of the user
-     * @return UserDto if found
+     * @param username the username provided in the request header
+     * @param password the password provided in the request header
+     * @throws com.epam.springcore.exception.UnauthorizedException if the credentials are invalid or user is not active
      */
-    UserDto getUserByUsername(String username);
+    boolean authenticate(String username, String password);
 
     /**
-     * Returns all registered users.
+     * Retrieves a user by their username.
+     * @param targetUsername the username of the user to retrieve
+     * @return UserDto representing the requested user
+     */
+    UserDto getUserByUsername(String targetUsername);
+
+    /**
+     * Retrieves all users in the system.
      *
-     * @return list of UserDto
+     * @return list of UserDto representing all users
      */
     List<UserDto> getAllUsers();
 
     /**
      * Deletes a user by their username.
      *
-     * @param username username of the user
+     * @param targetUsername the username of the user to be deleted
      */
-    void deleteUser(String username);
+    void deleteUser(String targetUsername);
 
     /**
-     * Updates the user password.
+     * Updates the password for the currently authenticated user.
      *
-     * @param username user's username
-     * @param request  request containing the new password
-     * @return updated UserDto
+     * @param request the request body containing old and new password
+     * @return UserDto with updated password information (masked in DTO)
      */
     UserDto updatePassword(String username, UpdatePasswordRequest request);
 
     /**
-     * Authenticates a user with provided credentials.
-     *
-     * @param request login credentials
-     * @return true if credentials are valid, false otherwise
+     * Toggles the active/passive status of the specified user.
+     * @param targetUsername the username of the user whose activation status will be toggled
      */
-    boolean login(LoginRequest request);
+    void activateOrDeactivate(String targetUsername);
 
     /**
-     * Creates a new trainee along with associated user account.
+     * Logs out the currently authenticated user by removing them from the session registry.
      *
-     * @param request trainee creation request
-     * @return created TraineeDto
+     * @param authUsername the authenticated user's username
+     * @param authPassword the authenticated user's password
      */
-    TraineeDto createTrainee(CreateTraineeRequest request);
-
     /**
-     * Creates a new trainer along with associated user account.
+     * Retrieves the full User entity by username.
+     * Primarily used internally for accessing the user domain model.
      *
-     * @param request trainer creation request
-     * @return created TrainerDto
+     * @param username the username to look up
+     * @return User entity
      */
-    TrainerDto createTrainer(CreateTrainerRequest request);
-
-
     User getUserEntityByUsername(String username);
 
     /**
-     * Toggles active/passive status of a trainee.
+     * Creates and persists a new User entity from a given request.
+     * This is an internal helper used during trainer/trainee creation.
      *
-     * @param username the username of the trainee
+     * @param request user creation request including names
+     * @return the persisted User entity
      */
-     void activateOrDeactivate(String username);
-
-    /**
-     * Logs out the user by removing them from the session registry.
-     *
-     * @param username the username to log out
-     */
-     void logout(String username) ;
-
-
-    }
+    User createUserEntity(CreateUserRequest request);
+}

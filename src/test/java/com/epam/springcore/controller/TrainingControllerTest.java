@@ -6,7 +6,7 @@ import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
 import com.epam.springcore.request.training.CreateTrainingRequest;
 import com.epam.springcore.request.training.UpdateTrainingRequest;
-import com.epam.springcore.service.ITrainingService;
+import com.epam.springcore.service.impl.TrainingServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +30,7 @@ public class TrainingControllerTest {
     private ObjectMapper objectMapper;
 
     @Mock
-    private ITrainingService trainingService;
+    private TrainingServiceImpl trainingService;
 
     private static final String BASE_URL = "/api/epam/v1/trainings";
 

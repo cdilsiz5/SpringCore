@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @DisplayName("Unit Tests for TrainingServiceImpl")
-class TrainingServiceImplTest {
+public class TrainingServiceImplTest {
 
     @Mock
     private TrainingRepository trainingRepository;

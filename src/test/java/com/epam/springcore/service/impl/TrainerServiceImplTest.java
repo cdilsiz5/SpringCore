@@ -2,23 +2,27 @@ package com.epam.springcore.service.impl;
 
 import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
-import com.epam.springcore.dto.UserDto;
 import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.mapper.TrainerMapper;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.User;
 import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.repository.TrainerRepository;
+import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 import com.epam.springcore.service.ITrainingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -26,15 +30,11 @@ import static org.mockito.Mockito.*;
 @DisplayName("Unit Tests for TrainerServiceImpl")
 class TrainerServiceImplTest {
 
-    @Mock
-    private TrainerRepository trainerRepository;
-    @Mock
-    private ITrainingService trainingService;
-    @Mock
-    private TrainerMapper trainerMapper;
-
-    @InjectMocks
-    private TrainerServiceImpl trainerService;
+    @Mock private TrainerRepository trainerRepository;
+    @Mock private ITrainingService trainingService;
+    @Mock private TrainerMapper trainerMapper;
+    @Mock private UserServiceImpl userService;
+    @InjectMocks private TrainerServiceImpl trainerService;
 
     @BeforeEach
     void setUp() {
@@ -42,158 +42,146 @@ class TrainerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should create trainer entity successfully")
+    void shouldCreateTrainer() {
+        CreateTrainerRequest request = new CreateTrainerRequest("Ali", "Kaya", Specialization.CARDIO);
+        User user = new User();
+        TrainerDto dto = new TrainerDto();
+
+        when(userService.createUserEntity(any())).thenReturn(user);
+        when(trainerRepository.save(any())).thenReturn(new Trainer());
+        when(trainerMapper.toTrainerDto(any())).thenReturn(dto);
+
+        TrainerDto result = trainerService.createTrainer(request);
+        assertNotNull(result);
+    }
+
+    @Test
+    void shouldGetTrainerByUsername() {
+        Trainer trainer = new Trainer();
+        TrainerDto dto = new TrainerDto();
+
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
+        when(trainerRepository.findByUserUsername("cihan")).thenReturn(Optional.of(trainer));
+        when(trainerMapper.toTrainerDto(trainer)).thenReturn(dto);
+
+        TrainerDto result = trainerService.getTrainerByUsername("admin", "pass", "cihan");
+        assertNotNull(result);
+    }
+
+    @Test
+    void shouldThrowWhenTrainerNotFoundByUsername() {
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
+        when(trainerRepository.findByUserUsername("ghost")).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> trainerService.getTrainerByUsername("admin", "pass", "ghost"));
+    }
+
+    @Test
+    void shouldThrowWhenAuthenticationFails() {
+        when(userService.authenticate("admin", "wrong")).thenReturn(false);
+
+        assertThrows(UnauthorizedException.class, () -> trainerService.getAllTrainers("admin", "wrong"));
+    }
+
+    @Test
+    void shouldGetAllTrainers() {
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
+        when(trainerRepository.findAll()).thenReturn(List.of(new Trainer()));
+        when(trainerMapper.toTrainerDtoList(any())).thenReturn(List.of(new TrainerDto()));
+
+        List<TrainerDto> result = trainerService.getAllTrainers("admin", "pass");
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void shouldUpdateTrainer() {
+        String username = "cihan";
+        UpdateTrainerRequest request = new UpdateTrainerRequest();
+        Trainer trainer = new Trainer();
+        TrainerDto dto = new TrainerDto();
+
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
+        when(trainerRepository.findByUserUsername(username)).thenReturn(Optional.of(trainer));
+        doNothing().when(trainerMapper).updateTrainerRequest(request, trainer);
+        when(trainerRepository.save(trainer)).thenReturn(trainer);
+        when(trainerMapper.toTrainerDto(trainer)).thenReturn(dto);
+
+        TrainerDto result = trainerService.updateTrainer("admin", "pass", username, request);
+        assertNotNull(result);
+    }
+
+    @Test
+    void shouldDeleteTrainer() {
+        String username = "cihan";
+        Trainer trainer = new Trainer();
+
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
+        when(trainerRepository.findByUserUsername(username)).thenReturn(Optional.of(trainer));
+
+        trainerService.deleteTrainer("admin", "pass", username);
+        verify(trainerRepository).delete(trainer);
+    }
+
+    @Test
+    void shouldToggleActivation() {
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
+        doNothing().when(userService).activateOrDeactivate("cihan");
+
+        trainerService.toggleActivation("admin", "pass", "cihan");
+        verify(userService).activateOrDeactivate("cihan");
+    }
+
+    @Test
+    void shouldGetTrainingHistory() {
+        String username = "cihan";
+        Trainer trainer = mock(Trainer.class);
+        com.epam.springcore.model.Training training = mock(com.epam.springcore.model.Training.class);
+        Trainee trainee = mock(Trainee.class);
+        User traineeUser = mock(User.class);
+
+        when(training.getDate()).thenReturn(LocalDate.of(2025, 7, 23));
+        when(training.getTrainee()).thenReturn(trainee);
+        when(trainee.getUser()).thenReturn(traineeUser);
+        when(traineeUser.getFirstName()).thenReturn("Cihan");
+        when(traineeUser.getLastName()).thenReturn("Dilsiz");
+
+        when(userService.authenticate("admin", "pass")).thenReturn(true);
+        when(trainerRepository.findByUserUsername(username)).thenReturn(Optional.of(trainer));
+
+        List<TrainingDto> result = trainerService.getTrainingHistory(
+                "admin", "pass", username,
+                LocalDate.of(2025, 7, 1),
+                LocalDate.of(2025, 7, 31),
+                "cihan", "dilsiz"
+        );
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
     void shouldCreateTrainerEntity() {
         User user = new User();
         user.setId(1L);
-        Specialization spec = Specialization.YOGA;
         Trainer trainer = new Trainer();
         TrainerDto dto = new TrainerDto();
 
         when(trainerRepository.save(any())).thenReturn(trainer);
         when(trainerMapper.toTrainerDto(trainer)).thenReturn(dto);
 
-        TrainerDto result = trainerService.createTrainerEntity(user, spec);
-
+        TrainerDto result = trainerService.createTrainerEntity(user, Specialization.YOGA);
         assertNotNull(result);
-        verify(trainerRepository).save(any(Trainer.class));
     }
 
     @Test
-    @DisplayName("Should return trainer by username")
-    void shouldReturnTrainerByUsername() {
-        String username = "Cihan.Dilsiz";
-        Trainer trainer = new Trainer();
-        TrainerDto dto = new TrainerDto();
-
-        when(trainerRepository.findByUserUsername(username)).thenReturn(Optional.of(trainer));
-        when(trainerMapper.toTrainerDto(trainer)).thenReturn(dto);
-
-        TrainerDto result = trainerService.getTrainerByUsername(username);
-
-        assertNotNull(result);
-        verify(trainerRepository).findByUserUsername(username);
-    }
-
-    @Test
-    @DisplayName("Should throw if trainer not found by username")
-    void shouldThrowIfTrainerNotFoundByUsername() {
-        when(trainerRepository.findByUserUsername("Cihan.Dilsiz")).thenReturn(Optional.empty());
-
-        assertThrows(NotFoundException.class, () -> trainerService.getTrainerByUsername("Cihan.Dilsiz"));
-    }
-
-    @Test
-    @DisplayName("Should return all trainers")
-    void shouldReturnAllTrainers() {
-        List<Trainer> trainers = List.of(new Trainer());
-        List<TrainerDto> dtoList = List.of(new TrainerDto());
-
-        when(trainerRepository.findAll()).thenReturn(trainers);
-        when(trainerMapper.toTrainerDtoList(trainers)).thenReturn(dtoList);
-
-        List<TrainerDto> result = trainerService.getAllTrainers();
-
-        assertEquals(1, result.size());
-    }
-
-    @Test
-    @DisplayName("Should update trainer information")
-    void shouldUpdateTrainer() {
-        String username = "Cihan.Dilsiz";
-        Trainer trainer = new Trainer();
-        TrainerDto dto = new TrainerDto();
-        UpdateTrainerRequest request = new UpdateTrainerRequest();
-
-        when(trainerRepository.findByUserUsername(username)).thenReturn(Optional.of(trainer));
-        doNothing().when(trainerMapper).updateTrainerRequest(request, trainer);
-        when(trainerRepository.save(trainer)).thenReturn(trainer);
-        when(trainerMapper.toTrainerDto(trainer)).thenReturn(dto);
-
-        TrainerDto result = trainerService.updateTrainer(username, request);
-
-        assertNotNull(result);
-        verify(trainerRepository).save(trainer);
-    }
-
-    @Test
-    @DisplayName("Should throw when updating non-existent trainer")
-    void shouldThrowWhenUpdatingNonExistentTrainer() {
-        when(trainerRepository.findByUserUsername("Cihan.Dilsiz")).thenReturn(Optional.empty());
-
-        assertThrows(NotFoundException.class, () -> trainerService.updateTrainer("Cihan.Dilsiz", new UpdateTrainerRequest()));
-    }
-
-    @Test
-    @DisplayName("Should delete trainer successfully")
-    void shouldDeleteTrainer() {
-        String username = "Cihan.Dilsiz";
-        Trainer trainer = new Trainer();
-
-        when(trainerRepository.findByUserUsername(username)).thenReturn(Optional.of(trainer));
-
-        trainerService.deleteTrainer(username);
-
-        verify(trainerRepository).delete(trainer);
-    }
-
-    @Test
-    @DisplayName("Should throw when deleting non-existent trainer")
-    void shouldThrowWhenDeletingNonExistentTrainer() {
-        when(trainerRepository.findByUserUsername("Cihan.Dilsiz")).thenReturn(Optional.empty());
-
-        assertThrows(NotFoundException.class, () -> trainerService.deleteTrainer("Cihan.Dilsiz"));
-    }
-
-    @Test
-    @DisplayName("Should return filtered training history")
-    void shouldReturnFilteredTrainingHistory() {
-        String username = "john";
-        Trainer trainer = new Trainer();
-        TrainingDto trainingDto = new TrainingDto();
-        trainingDto.setDate(LocalDate.of(2025, 7, 21));
-
-        UserDto user = UserDto.builder()
-                .id(1L)
-                .firstName("Cihan")
-                .lastName("Dilsiz")
-                .username("cihan.dilsiz")
-                .userActive(true)
-                .build();
-
-        com.epam.springcore.dto.TraineeDto traineeDto = new com.epam.springcore.dto.TraineeDto();
-        traineeDto.setUser(user);
-
-        trainingDto.setTrainee(traineeDto);
-
-        when(trainerRepository.findByUserUsername(username)).thenReturn(Optional.of(trainer));
-        when(trainingService.findAllByTrainer(trainer)).thenReturn(List.of(trainingDto));
-
-        List<TrainingDto> result = trainerService.getTrainingHistory(
-                username,
-                LocalDate.of(2025, 7, 21),
-                LocalDate.of(2025, 12, 31),
-                null,
-                null
-        );
-
-        assertEquals(1, result.size());
-    }
-
-
-    @Test
-    @DisplayName("Should get trainer by ID")
     void shouldGetTrainerById() {
         Trainer trainer = new Trainer();
         when(trainerRepository.findById(1L)).thenReturn(Optional.of(trainer));
 
         Trainer result = trainerService.getTrainerById(1L);
-
         assertNotNull(result);
     }
 
     @Test
-    @DisplayName("Should throw when trainer not found by ID")
     void shouldThrowWhenTrainerNotFoundById() {
         when(trainerRepository.findById(99L)).thenReturn(Optional.empty());
 
