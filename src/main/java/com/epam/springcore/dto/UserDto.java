@@ -11,5 +11,5 @@ public class UserDto {
     private String username;
     private String firstName;
     private String lastName;
-    private boolean isActive;
+    private boolean userActive;
 }

@@ -82,4 +82,13 @@ public interface IUserService {
      * @param username the username of the trainee
      */
      void activateOrDeactivate(String username);
-}
+
+    /**
+     * Logs out the user by removing them from the session registry.
+     *
+     * @param username the username to log out
+     */
+     void logout(String username) ;
+
+
+    }

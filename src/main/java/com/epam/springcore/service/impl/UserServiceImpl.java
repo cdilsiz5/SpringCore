@@ -16,6 +16,7 @@ import com.epam.springcore.request.user.UpdatePasswordRequest;
 import com.epam.springcore.service.ITraineeService;
 import com.epam.springcore.service.ITrainerService;
 import com.epam.springcore.service.IUserService;
+import com.epam.springcore.session.UserSessionRegistry;
 import com.epam.springcore.util.CredentialGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class UserServiceImpl implements IUserService {
     private final ITraineeService traineeService;
     private final CredentialGenerator credentialGenerator;
     private final UserMapper userMapper;
+    private final UserSessionRegistry  userSessionRegistry;
 
     @Override
     public UserDto getUserByUsername(String username) {
@@ -85,12 +87,13 @@ public class UserServiceImpl implements IUserService {
             throw new InvalidCredentialsException("Invalid username or password");
         }
 
-        if (!user.isActive()) {
+        if (!user.isUserActive()) {
             log.warn("Login failed: User is not active: {}", request.getUsername());
             throw new InvalidCredentialsException("User is not active");
         }
 
         log.info("Login successful for username: {}", request.getUsername());
+        userSessionRegistry.setActive(user.getUsername());
         return true;
     }
 
@@ -125,6 +128,16 @@ public class UserServiceImpl implements IUserService {
 
         return trainerService.createTrainerEntity(savedUser, request.getSpecialty());
     }
+    @Override
+    public void logout(String username) {
+
+        if (userSessionRegistry.isActive(username)) {
+            userSessionRegistry.removeUser(username);
+            log.info("User '{}' has been logged out and removed from session registry.", username);
+        } else {
+            log.warn("Logout requested for username '{}', but no active session was found.", username);
+        }
+    }
 
     private User checkIfUserExistByUsername(String username) {
         return userRepository.findByUsername(username)
@@ -142,8 +155,8 @@ public class UserServiceImpl implements IUserService {
     public void activateOrDeactivate(String username) {
         log.info("Toggling activation status for user with username: {}", username);
         User user = getUserEntityByUsername(username);
-        user.setActive(!user.isActive());
-        log.info("User activation status for '{}' changed to {}", username, user.isActive());
+        user.setUserActive(!user.isUserActive());
+        log.info("User activation status for '{}' changed to {}", username, user.isUserActive());
         userRepository.save(user);
      }
     private User createUserEntity(CreateUserRequest request) {
@@ -155,6 +168,7 @@ public class UserServiceImpl implements IUserService {
         log.info("User created successfully: {}", savedUser.getUsername());
         return  savedUser;
     }
+
 
 
 }

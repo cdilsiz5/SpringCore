@@ -58,7 +58,7 @@ public class UserControllerTest {
     @Test
     @DisplayName("GET /users/{username} - Success")
     void testGetUser_success() throws Exception {
-        UserDto user = UserDto.builder().username("Cihan.Dilsiz").firstName("Cihan").lastName("Dilsiz").isActive(true).build();
+        UserDto user = UserDto.builder().username("Cihan.Dilsiz").firstName("Cihan").lastName("Dilsiz").userActive(true).build();
         when(userService.getUserByUsername("Cihan.Dilsiz")).thenReturn(user);
 
         mockMvc.perform(get(BASE_URL + "/Cihan.Dilsiz"))

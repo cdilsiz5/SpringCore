@@ -9,6 +9,7 @@ import com.epam.springcore.request.user.LoginRequest;
 import com.epam.springcore.request.user.UpdatePasswordRequest;
 import com.epam.springcore.service.ITraineeService;
 import com.epam.springcore.service.ITrainerService;
+import com.epam.springcore.session.UserSessionRegistry;
 import com.epam.springcore.util.CredentialGenerator;
 import com.epam.springcore.mapper.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,9 @@ public class UserServiceImplTest {
     @Mock
     private UserMapper userMapper;
 
+    @Mock
+    private UserSessionRegistry userSessionRegistry;
+
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -51,8 +55,8 @@ public class UserServiceImplTest {
     @Test
     @DisplayName("getUserByUsername - should return user when user exists")
     void shouldReturnUser_WhenUsernameExists() {
-        User user = User.builder().username("Cihan.Dilsiz").firstName("Cihan").lastName("Dilsiz").isActive(true).build();
-        UserDto userDto = UserDto.builder().username("Cihan.Dilsiz").firstName("Cihan").lastName("Dilsiz").isActive(true).build();
+        User user = User.builder().username("Cihan.Dilsiz").firstName("Cihan").lastName("Dilsiz").userActive(true).build();
+        UserDto userDto = UserDto.builder().username("Cihan.Dilsiz").firstName("Cihan").lastName("Dilsiz").userActive(true).build();
 
         when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
         when(userMapper.toUserDto(user)).thenReturn(userDto);
@@ -76,7 +80,7 @@ public class UserServiceImplTest {
     @DisplayName("login - should return true for correct credentials")
     void shouldLoginSuccessfully_WhenCredentialsCorrect() {
         LoginRequest request = new LoginRequest("Cihan.Dilsiz", "1234");
-        User user = User.builder().username("Cihan.Dilsiz").password("1234").isActive(true).build();
+        User user = User.builder().username("Cihan.Dilsiz").password("1234").userActive(true).build();
 
         when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
 
@@ -88,7 +92,7 @@ public class UserServiceImplTest {
     @DisplayName("login - should throw exception when password is incorrect")
     void shouldThrowException_WhenPasswordIncorrect() {
         LoginRequest request = new LoginRequest("Cihan.Dilsiz", "wrong");
-        User user = User.builder().username("Cihan.Dilsiz").password("1234").isActive(true).build();
+        User user = User.builder().username("Cihan.Dilsiz").password("1234").userActive(true).build();
 
         when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
 
@@ -111,7 +115,7 @@ public class UserServiceImplTest {
     @DisplayName("updatePassword - should update password when old password matches")
     void shouldUpdatePassword_WhenUserExists() {
         UpdatePasswordRequest request = new UpdatePasswordRequest("oldPass", "newPass");
-        User user = User.builder().username("Cihan.Dilsiz").password("oldPass").isActive(true).build();
+        User user = User.builder().username("Cihan.Dilsiz").password("oldPass").userActive(true).build();
         UserDto userDto = UserDto.builder().username("Cihan.Dilsiz").build();
 
         when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
@@ -171,13 +175,13 @@ public class UserServiceImplTest {
     @Test
     @DisplayName("activateOrDeactivate - should toggle activation status")
     void shouldToggleUserActivationStatus() {
-        User user = User.builder().username("Cihan.Dilsiz").isActive(true).build();
+        User user = User.builder().username("Cihan.Dilsiz").userActive(true).build();
 
         when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
 
         userService.activateOrDeactivate("Cihan.Dilsiz");
 
-        assertFalse(user.isActive());
+        assertFalse(user.isUserActive());
         verify(userRepository).save(user);
     }
 

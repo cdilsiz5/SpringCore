@@ -158,7 +158,7 @@ class TrainerServiceImplTest {
                 .firstName("Cihan")
                 .lastName("Dilsiz")
                 .username("cihan.dilsiz")
-                .isActive(true)
+                .userActive(true)
                 .build();
 
         com.epam.springcore.dto.TraineeDto traineeDto = new com.epam.springcore.dto.TraineeDto();

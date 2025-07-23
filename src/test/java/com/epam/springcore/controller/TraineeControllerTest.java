@@ -56,7 +56,7 @@ public  class TraineeControllerTest {
                 .username("Cihan.Dilsiz")
                 .firstName("Cihan")
                 .lastName("Dilsiz")
-                .isActive(true)
+                .userActive(true)
                 .build();
 
         mockTrainee = TraineeDto.builder()
@@ -178,7 +178,7 @@ public  class TraineeControllerTest {
                 .firstName("Ali")
                 .lastName("Yılmaz")
                 .username("ali.yilmaz")
-                .isActive(true)
+                .userActive(true)
                 .build();
 
         TrainerDto trainer = TrainerDto.builder()
