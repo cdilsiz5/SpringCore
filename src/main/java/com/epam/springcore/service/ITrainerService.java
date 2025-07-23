@@ -3,8 +3,6 @@ package com.epam.springcore.service;
 import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Trainer;
-import com.epam.springcore.model.User;
-import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 
@@ -91,14 +89,6 @@ public interface ITrainerService {
             String traineeLastName
     );
 
-    /**
-     * Creates a trainer entity from a given user and specialization (used internally).
-     *
-     * @param user user entity
-     * @param specialty specialization
-     * @return created trainer dto
-     */
-    TrainerDto createTrainerEntity(User user, Specialization specialty);
 
     /**
      * Returns the Trainer entity by ID (used internally).

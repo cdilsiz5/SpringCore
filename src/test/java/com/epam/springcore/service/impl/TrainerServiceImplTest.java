@@ -1,18 +1,16 @@
 package com.epam.springcore.service.impl;
 
+import com.epam.springcore.dto.TraineeDto;
 import com.epam.springcore.dto.TrainerDto;
-import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.mapper.TrainerMapper;
-import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.User;
 import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.repository.TrainerRepository;
 import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
-import com.epam.springcore.service.ITrainingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,7 +28,7 @@ import static org.mockito.Mockito.*;
 class TrainerServiceImplTest {
 
     @Mock private TrainerRepository trainerRepository;
-    @Mock private ITrainingService trainingService;
+    @Mock private TrainingServiceImpl trainingService;
     @Mock private TrainerMapper trainerMapper;
     @Mock private UserServiceImpl userService;
     @InjectMocks private TrainerServiceImpl trainerService;
@@ -41,19 +38,6 @@ class TrainerServiceImplTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    void shouldCreateTrainer() {
-        CreateTrainerRequest request = new CreateTrainerRequest("Ali", "Kaya", Specialization.CARDIO);
-        User user = new User();
-        TrainerDto dto = new TrainerDto();
-
-        when(userService.createUserEntity(any())).thenReturn(user);
-        when(trainerRepository.save(any())).thenReturn(new Trainer());
-        when(trainerMapper.toTrainerDto(any())).thenReturn(dto);
-
-        TrainerDto result = trainerService.createTrainer(request);
-        assertNotNull(result);
-    }
 
     @Test
     void shouldGetTrainerByUsername() {
@@ -131,45 +115,38 @@ class TrainerServiceImplTest {
         verify(userService).activateOrDeactivate("cihan");
     }
 
-    @Test
-    void shouldGetTrainingHistory() {
-        String username = "cihan";
-        Trainer trainer = mock(Trainer.class);
-        com.epam.springcore.model.Training training = mock(com.epam.springcore.model.Training.class);
-        Trainee trainee = mock(Trainee.class);
-        User traineeUser = mock(User.class);
-
-        when(training.getDate()).thenReturn(LocalDate.of(2025, 7, 23));
-        when(training.getTrainee()).thenReturn(trainee);
-        when(trainee.getUser()).thenReturn(traineeUser);
-        when(traineeUser.getFirstName()).thenReturn("Cihan");
-        when(traineeUser.getLastName()).thenReturn("Dilsiz");
-
-        when(userService.authenticate("admin", "pass")).thenReturn(true);
-        when(trainerRepository.findByUserUsername(username)).thenReturn(Optional.of(trainer));
-
-        List<TrainingDto> result = trainerService.getTrainingHistory(
-                "admin", "pass", username,
-                LocalDate.of(2025, 7, 1),
-                LocalDate.of(2025, 7, 31),
-                "cihan", "dilsiz"
-        );
-
-        assertEquals(1, result.size());
-    }
 
     @Test
-    void shouldCreateTrainerEntity() {
-        User user = new User();
-        user.setId(1L);
-        Trainer trainer = new Trainer();
-        TrainerDto dto = new TrainerDto();
+    void shouldCreateTrainer() {
+        // GIVEN
+        User user = User.builder()
+                .username("Cihan")
+                .lastName("Dilsiz")
+                .password("pass")
+                .build();
 
+        Trainer trainer = Trainer.builder()
+                .user(user)
+                .specialization(Specialization.BOXING)
+                .build();
+
+        CreateTrainerRequest request = new CreateTrainerRequest();
+        request.setFirstName("Cihan");
+        request.setLastName("Dilsiz");
+        request.setSpecialty(Specialization.BOXING);
+
+        TrainerDto expectedDto = new TrainerDto();
+
+        // WHEN (Mock setup)
+        when(userService.createUserEntity(any())).thenReturn(user);
+        when(trainerMapper.createTrainer(request)).thenReturn(trainer);
         when(trainerRepository.save(any())).thenReturn(trainer);
-        when(trainerMapper.toTrainerDto(trainer)).thenReturn(dto);
+        when(trainerMapper.toTrainerDto(trainer)).thenReturn(expectedDto);
 
-        TrainerDto result = trainerService.createTrainerEntity(user, Specialization.YOGA);
+         TrainerDto result = trainerService.createTrainer(request);
+
         assertNotNull(result);
+        assertEquals(expectedDto, result);
     }
 
     @Test

@@ -12,7 +12,7 @@ import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
 import com.epam.springcore.request.user.CreateUserRequest;
 import com.epam.springcore.service.ITraineeService;
-import com.epam.springcore.service.ITrainingService;
+import com.epam.springcore.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,9 +27,9 @@ import java.util.stream.Collectors;
 public class TraineeServiceImpl implements ITraineeService {
 
     private final TraineeRepository traineeRepository;
-    private final ITrainingService trainingService;
+    private final TrainingServiceImpl trainingService;
     private final TraineeMapper traineeMapper;
-    private final UserServiceImpl userService;
+    private final IUserService userService;
 
     @Override
     public TraineeDto createTrainee(CreateTraineeRequest request) {
@@ -38,8 +38,12 @@ public class TraineeServiceImpl implements ITraineeService {
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .build();
+        Trainee trainee=traineeMapper.createTrainee(request);
         User savedUser = userService.createUserEntity(createUserRequest);
-        return createTraineeEntity(savedUser);
+        trainee.setUser(savedUser);
+        Trainee savedTrainee= traineeRepository.save(trainee);
+        log.info("Trainee created. ID: {}", savedTrainee.getId());
+        return traineeMapper.toTraineeDto(savedTrainee);
     }
 
     @Override
@@ -102,16 +106,6 @@ public class TraineeServiceImpl implements ITraineeService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public TraineeDto createTraineeEntity(User user) {
-        log.info("Creating Trainee entity for user ID: {}", user.getId());
-        Trainee trainee = Trainee.builder()
-                .user(user)
-                .build();
-        Trainee savedTrainee = traineeRepository.save(trainee);
-        log.info("Trainee saved with ID: {}", savedTrainee.getId());
-        return traineeMapper.toTraineeDto(savedTrainee);
-    }
 
     @Override
     public Trainee getTraineeById(Long traineeId) {

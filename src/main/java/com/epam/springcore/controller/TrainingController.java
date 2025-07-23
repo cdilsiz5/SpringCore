@@ -17,11 +17,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.epam.springcore.constants.Constant.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(API_PREFIX +API_EPAM+API_VERSION_V1 + API_TRAINING)
+@RequestMapping("/api/epam/v1/trainings")
 @Tag(name = "Training Resource", description = "SpringCore REST APIs for Trainings")
 public class TrainingController {
 

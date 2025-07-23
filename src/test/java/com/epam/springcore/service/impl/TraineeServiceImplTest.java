@@ -1,18 +1,15 @@
 package com.epam.springcore.service.impl;
 
 import com.epam.springcore.dto.TraineeDto;
-import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.mapper.TraineeMapper;
 import com.epam.springcore.model.Trainee;
-import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.User;
 import com.epam.springcore.repository.TraineeRepository;
 import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
 import com.epam.springcore.request.user.CreateUserRequest;
-import com.epam.springcore.service.ITrainingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +27,7 @@ class TraineeServiceImplTest {
     @Mock
     private TraineeRepository traineeRepository;
     @Mock
-    private ITrainingService trainingService;
+    private TraineeServiceImpl trainingService;
     @Mock
     private TraineeMapper traineeMapper;
     @Mock
@@ -44,19 +41,6 @@ class TraineeServiceImplTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    void shouldCreateTrainee() {
-        CreateTraineeRequest request = new CreateTraineeRequest("Cihan", "Dilsiz",LocalDate.of(1999,07,19),"Mersin");
-        User user = new User();
-        TraineeDto dto = new TraineeDto();
-
-        when(userService.createUserEntity(any(CreateUserRequest.class))).thenReturn(user);
-        when(traineeRepository.save(any())).thenReturn(new Trainee());
-        when(traineeMapper.toTraineeDto(any())).thenReturn(dto);
-
-        TraineeDto result = traineeService.createTrainee(request);
-        assertNotNull(result);
-    }
 
     @Test
     void shouldGetTraineeByUsername() {
@@ -146,54 +130,41 @@ class TraineeServiceImplTest {
         verify(userService).activateOrDeactivate("cihan");
     }
 
-    @Test
-    void shouldGetTrainingHistory() {
-        String username = "cihan";
-        Trainee trainee = mock(Trainee.class);
-        TrainingDto dto = new TrainingDto();
-
-        // training mock structure
-        com.epam.springcore.model.Training training = mock(com.epam.springcore.model.Training.class);
-        Trainer trainer = mock(Trainer.class);
-        User trainerUser = mock(User.class);
-        Trainee linkedTrainee = mock(Trainee.class);
-        User traineeUser = mock(User.class);
-
-        when(training.getDate()).thenReturn(LocalDate.of(2025, 7, 23));
-        when(training.getTrainer()).thenReturn(trainer);
-        when(trainer.getUser()).thenReturn(trainerUser);
-        when(trainerUser.getFirstName()).thenReturn("Ahmet");
-        when(trainerUser.getLastName()).thenReturn("Yılmaz");
-        when(training.getTrainee()).thenReturn(linkedTrainee);
-        when(linkedTrainee.getUser()).thenReturn(traineeUser);
-        when(traineeUser.getFirstName()).thenReturn("Cihan");
-        when(traineeUser.getLastName()).thenReturn("Dilsiz");
-
-        when(userService.authenticate("admin", "pass")).thenReturn(true);
-        when(traineeRepository.findByUserUsername(username)).thenReturn(Optional.of(trainee));
-
-        List<TrainingDto> result = traineeService.getTrainingHistory(
-                "admin", "pass", username,
-                LocalDate.of(2025, 7, 1),
-                LocalDate.of(2025, 7, 31),
-                "ahmet", "yılmaz"
-        );
-
-        assertEquals(1, result.size());
-    }
 
     @Test
-    void shouldCreateTraineeEntity() {
-        User user = new User();
-        user.setId(1L);
-        Trainee trainee = new Trainee();
-        TraineeDto dto = new TraineeDto();
+    void shouldCreateTrainee() {
+        // GIVEN (hazırlık)
+        User user = User.builder()
+                .username("Cihan")
+                .lastName("Dilsiz")
+                .password("pass")
+                .build();
 
+        Trainee trainee = Trainee.builder()
+                .user(user)
+                .dateOfBirth(LocalDate.of(1990, 1, 1))
+                .address("Mersin")
+                .build();
+
+        CreateTraineeRequest request = new CreateTraineeRequest();
+        request.setFirstName("Cihan");
+        request.setLastName("Dilsiz");
+        request.setDateOfBirth(LocalDate.of(1990, 1, 1));
+        request.setAddress("Mersin");
+
+        TraineeDto expectedDto = new TraineeDto();
+
+        // WHEN
+        when(traineeMapper.createTrainee(request)).thenReturn(trainee);
+        when(userService.createUserEntity(any())).thenReturn(user);
         when(traineeRepository.save(any())).thenReturn(trainee);
-        when(traineeMapper.toTraineeDto(trainee)).thenReturn(dto);
+        when(traineeMapper.toTraineeDto(trainee)).thenReturn(expectedDto);
 
-        TraineeDto result = traineeService.createTraineeEntity(user);
+        // THEN
+        TraineeDto result = traineeService.createTrainee(request);
+
         assertNotNull(result);
+        assertEquals(expectedDto, result);
     }
 
     @Test

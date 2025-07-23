@@ -3,7 +3,6 @@ package com.epam.springcore.service;
 import com.epam.springcore.dto.TraineeDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Trainee;
-import com.epam.springcore.model.User;
 import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
 
@@ -87,13 +86,6 @@ public interface ITraineeService {
                                          LocalDate from, LocalDate to,
                                          String trainerName, String trainerLastName);
 
-    /**
-     * Creates a new Trainee entity from an existing User entity.
-     *
-     * @param user the user entity to associate with the new trainee
-     * @return the created trainee DTO
-     */
-    TraineeDto createTraineeEntity(User user);
 
     /**
      * Fetches the trainee entity by its ID.

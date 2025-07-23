@@ -6,7 +6,6 @@ import com.epam.springcore.request.user.CreateUserRequest;
 import com.epam.springcore.request.user.UpdateUserRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
-
 import java.util.List;
 @Mapper(componentModel = "spring")
 

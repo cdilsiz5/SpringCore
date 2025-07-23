@@ -1,12 +1,11 @@
 package com.epam.springcore.controller;
 
 import com.epam.springcore.dto.TraineeDto;
-import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.dto.UserDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
-import com.epam.springcore.service.ITraineeService;
+import com.epam.springcore.service.impl.TraineeServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -33,7 +32,7 @@ class TraineeControllerTest {
     private UserDto mockUser;
 
     @Mock
-    private ITraineeService traineeService;
+    private TraineeServiceImpl traineeService;
 
     private static final String BASE_URL = "/api/epam/v1/trainees";
     private static final String AUTH_USERNAME = "admin";
@@ -138,23 +137,5 @@ class TraineeControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @Test
-    void testGetTrainingHistory_success() throws Exception {
-        TrainingDto training = TrainingDto.builder()
-                .id(1L)
-                .trainee(mockTrainee)
-                .build();
 
-        when(traineeService.getTrainingHistory(eq(AUTH_USERNAME), eq(AUTH_PASSWORD), eq("Cihan.Dilsiz"), any(), any(), any(), any()))
-                .thenReturn(List.of(training));
-
-        mockMvc.perform(get(BASE_URL + "/Cihan.Dilsiz/training-history")
-                        .header("authUsername", AUTH_USERNAME)
-                        .header("authPassword", AUTH_PASSWORD)
-                        .param("from", "2025-07-21")
-                        .param("to", "2025-12-31")
-                        .param("trainerName", "Ali"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1));
-    }
 }

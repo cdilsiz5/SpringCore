@@ -3,11 +3,9 @@ package com.epam.springcore.controller;
 import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.dto.UserDto;
-import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
 import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
-import com.epam.springcore.service.ITrainerService;
 import com.epam.springcore.service.impl.TrainerServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -26,7 +24,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-public class TrainerControllerTest {
+class TrainerControllerTest {
 
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;

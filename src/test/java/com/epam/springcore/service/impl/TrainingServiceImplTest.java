@@ -1,7 +1,6 @@
 package com.epam.springcore.service.impl;
 
 import com.epam.springcore.dto.TrainingDto;
-import com.epam.springcore.dto.TrainingTypeDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.mapper.TrainingMapper;
 import com.epam.springcore.model.Trainee;
@@ -24,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @DisplayName("Unit Tests for TrainingServiceImpl")
-public class TrainingServiceImplTest {
+class TrainingServiceImplTest {
 
     @Mock
     private TrainingRepository trainingRepository;

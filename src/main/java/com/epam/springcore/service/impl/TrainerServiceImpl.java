@@ -5,6 +5,7 @@ import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.mapper.TrainerMapper;
+import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.Trainer;
 import com.epam.springcore.model.User;
 import com.epam.springcore.model.enums.Specialization;
@@ -13,7 +14,7 @@ import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 import com.epam.springcore.request.user.CreateUserRequest;
 import com.epam.springcore.service.ITrainerService;
-import com.epam.springcore.service.ITrainingService;
+import com.epam.springcore.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,9 +29,9 @@ import java.util.stream.Collectors;
 public class TrainerServiceImpl implements ITrainerService {
 
     private final TrainerRepository trainerRepository;
-    private final ITrainingService trainingService;
+    private final TrainingServiceImpl trainingService;
     private final TrainerMapper trainerMapper;
-    private final UserServiceImpl userService;
+    private final IUserService userService;
 
     @Override
     public TrainerDto createTrainer(CreateTrainerRequest request) {
@@ -40,7 +41,10 @@ public class TrainerServiceImpl implements ITrainerService {
                 .lastName(request.getLastName())
                 .build();
         User savedUser = userService.createUserEntity(createUserRequest);
-        return createTrainerEntity(savedUser, request.getSpecialty());
+        Trainer trainer = trainerMapper.createTrainer(request);
+        trainer.setUser(savedUser);
+        Trainer savedTrainer=trainerRepository.save(trainer);
+       return trainerMapper.toTrainerDto(savedTrainer);
     }
 
     @Override
@@ -103,17 +107,6 @@ public class TrainerServiceImpl implements ITrainerService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public TrainerDto createTrainerEntity(User user, Specialization specialty) {
-        log.info("Creating Trainer entity for user ID: {}, specialization: {}", user.getId(), specialty);
-        Trainer trainer = Trainer.builder()
-                .specialization(specialty)
-                .user(user)
-                .build();
-        Trainer savedTrainer = trainerRepository.save(trainer);
-        log.info("Trainer saved with ID: {}", savedTrainer.getId());
-        return trainerMapper.toTrainerDto(savedTrainer);
-    }
 
     @Override
     public Trainer getTrainerById(Long trainerId) {

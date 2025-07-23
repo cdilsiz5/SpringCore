@@ -4,7 +4,7 @@ import com.epam.springcore.dto.TraineeDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
-import com.epam.springcore.service.ITraineeService;
+import com.epam.springcore.service.impl.TraineeServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -19,15 +19,14 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-import static com.epam.springcore.constants.Constant.*;
 
 @RestController
-@RequestMapping(API_PREFIX + API_EPAM + API_VERSION_V1 + API_TRAINEE)
+@RequestMapping("/api/epam/v1/trainees")
 @RequiredArgsConstructor
 @Tag(name = "Trainee Controller", description = "Endpoints for managing trainees")
 public class TraineeController {
 
-    private final ITraineeService traineeService;
+    private final TraineeServiceImpl traineeService;
 
     @Operation(summary = "Create new trainee", description = "Public endpoint. Creates a new trainee and generates credentials.")
     @ApiResponses(value = {
