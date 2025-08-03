@@ -6,6 +6,7 @@ import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
+import com.epam.springcore.filter.TransactionIdFilter;
 import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
 import com.epam.springcore.request.trainer.TrainerUsernameRequest;
@@ -44,14 +45,17 @@ class TraineeControllerTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         TraineeController controller = new TraineeController(traineeService);
+
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .addFilters(new TransactionIdFilter())
                 .build();
 
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
+
 
     @Test
     @DisplayName("Should create trainee and return login credentials")

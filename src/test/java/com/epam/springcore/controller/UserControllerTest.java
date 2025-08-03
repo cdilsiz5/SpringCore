@@ -22,9 +22,6 @@ class UserControllerTest {
         userController = new UserController(userService);
     }
 
-    @Nested
-    @DisplayName("Login Tests")
-    class LoginTests {
 
         @Test
         @DisplayName("Should login successfully with valid credentials")
@@ -78,11 +75,7 @@ class UserControllerTest {
 
             assertEquals("Invalid username or password", ex.getMessage());
         }
-    }
 
-    @Nested
-    @DisplayName("Change Password Tests")
-    class ChangePasswordTests {
 
         @Test
         @DisplayName("Should change password successfully")
@@ -137,4 +130,4 @@ class UserControllerTest {
             assertEquals("Invalid username or password", ex.getMessage());
         }
     }
-}
+

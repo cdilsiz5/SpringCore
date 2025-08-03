@@ -5,6 +5,7 @@ import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
+import com.epam.springcore.filter.TransactionIdFilter;
 import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
@@ -43,6 +44,7 @@ class TrainerControllerTest {
         TrainerController controller = new TrainerController(trainerService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .addFilters(new TransactionIdFilter())
                 .build();
 
         objectMapper = new ObjectMapper();
