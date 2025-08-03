@@ -11,11 +11,11 @@ import com.epam.springcore.request.trainee.UpdateTraineeRequest;
 import com.epam.springcore.request.trainer.TrainerUsernameRequest;
 import com.epam.springcore.response.LoginCredentialsResponse;
 import com.epam.springcore.service.ITraineeService;
-import com.epam.springcore.service.impl.TraineeServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -54,6 +54,7 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should create trainee and return login credentials")
     void testCreateTrainee_success() throws Exception {
         CreateTraineeRequest request = new CreateTraineeRequest("Ali", "Veli", LocalDate.of(1990, 1, 1), "İstanbul");
         LoginCredentialsResponse response = new LoginCredentialsResponse("ali.veli", "123456");
@@ -68,6 +69,7 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should return bad request if trainee data is invalid")
     void testCreateTrainee_validationError() throws Exception {
         CreateTraineeRequest request = new CreateTraineeRequest("", "", null, "");
 
@@ -78,15 +80,16 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should return trainee when username exists")
     void testGetTraineeByUsername_success() throws Exception {
-        when(traineeService.getTraineeByUsername("ali.veli"))
-                .thenReturn(new TraineeDto());
+        when(traineeService.getTraineeByUsername("ali.veli")).thenReturn(new TraineeDto());
 
         mockMvc.perform(get(BASE_URL + "/ali.veli"))
                 .andExpect(status().isOk());
     }
 
     @Test
+    @DisplayName("Should return 404 if trainee not found by username")
     void testGetTraineeByUsername_notFound() throws Exception {
         when(traineeService.getTraineeByUsername("unknown"))
                 .thenThrow(new NotFoundException("Trainee not found"));
@@ -96,6 +99,7 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should return all trainees")
     void testGetAllTrainees_success() throws Exception {
         when(traineeService.getAllTrainees()).thenReturn(List.of(new TraineeDto()));
 
@@ -104,6 +108,7 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should update trainee information successfully")
     void testUpdateTrainee_success() throws Exception {
         UpdateTraineeRequest request = new UpdateTraineeRequest(LocalDate.of(1991, 1, 1), "Ankara");
         when(traineeService.updateTrainee(eq("ali.veli"), any())).thenReturn(new TraineeDto());
@@ -115,9 +120,11 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should return 404 if trying to update unknown trainee")
     void testUpdateTrainee_notFound() throws Exception {
         UpdateTraineeRequest request = new UpdateTraineeRequest(LocalDate.of(1991, 1, 1), "Ankara");
-        when(traineeService.updateTrainee(eq("unknown"), any())).thenThrow(new NotFoundException("Trainee not found"));
+        when(traineeService.updateTrainee(eq("unknown"), any()))
+                .thenThrow(new NotFoundException("Trainee not found"));
 
         mockMvc.perform(put(BASE_URL + "/unknown")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -126,6 +133,7 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should delete trainee successfully")
     void testDeleteTrainee_success() throws Exception {
         doNothing().when(traineeService).deleteTrainee("ali.veli");
 
@@ -134,6 +142,7 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should return unauthorized when delete is not allowed")
     void testDeleteTrainee_unauthorized() throws Exception {
         doThrow(new UnauthorizedException("Unauthorized")).when(traineeService).deleteTrainee("ali.veli");
 
@@ -142,6 +151,7 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should toggle trainee activation status")
     void testToggleTraineeActivation_success() throws Exception {
         doNothing().when(traineeService).toggleActivation("ali.veli");
 
@@ -150,6 +160,7 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should return 404 when toggling activation for unknown trainee")
     void testToggleTraineeActivation_notFound() throws Exception {
         doThrow(new NotFoundException("Trainee not found"))
                 .when(traineeService).toggleActivation("unknown");
@@ -159,6 +170,7 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should return trainee training history")
     void testGetTrainingHistory_success() throws Exception {
         when(traineeService.getTrainingHistory(any(), any(), any(), any(), any()))
                 .thenReturn(List.of(new TrainingDto()));
@@ -170,6 +182,7 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should return list of trainers not assigned to the trainee")
     void testGetUnassignedTrainers_success() throws Exception {
         when(traineeService.getUnassignedTrainers("ali.veli"))
                 .thenReturn(List.of(new TrainerDto()));
@@ -179,10 +192,12 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should update trainer list for the trainee")
     void testUpdateTrainerList_success() throws Exception {
         TrainerUsernameRequest req = new TrainerUsernameRequest("trainer1");
 
-        when(traineeService.updateTrainerList(eq("ali.veli"), any())).thenReturn(List.of(new TrainerDto()));
+        when(traineeService.updateTrainerList(eq("ali.veli"), any()))
+                .thenReturn(List.of(new TrainerDto()));
 
         mockMvc.perform(put(BASE_URL + "/ali.veli/update-trainer-list")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -191,6 +206,7 @@ class TraineeControllerTest {
     }
 
     @Test
+    @DisplayName("Should return 404 if trainer not found during trainer list update")
     void testUpdateTrainerList_notFound() throws Exception {
         TrainerUsernameRequest req = new TrainerUsernameRequest("unknown");
 

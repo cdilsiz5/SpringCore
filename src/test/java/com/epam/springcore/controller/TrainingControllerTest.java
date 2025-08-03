@@ -6,13 +6,12 @@ import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
 import com.epam.springcore.request.training.CreateTrainingRequest;
-import com.epam.springcore.request.training.UpdateTrainingRequest;
 import com.epam.springcore.service.ITrainingService;
-import com.epam.springcore.service.impl.TrainingServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -50,6 +49,7 @@ class TrainingControllerTest {
     }
 
     @Test
+    @DisplayName("Should create a new training and return 201 Created")
     void testCreateTraining_success() throws Exception {
         CreateTrainingRequest request = new CreateTrainingRequest(1L, 2L, "2025-01-01", 1L, 45);
         TrainingDto response = new TrainingDto();
@@ -63,6 +63,7 @@ class TrainingControllerTest {
     }
 
     @Test
+    @DisplayName("Should return 400 Bad Request if training data is invalid")
     void testCreateTraining_validationError() throws Exception {
         CreateTrainingRequest request = new CreateTrainingRequest(null, null, "", null, 0);
 
@@ -73,6 +74,7 @@ class TrainingControllerTest {
     }
 
     @Test
+    @DisplayName("Should return training by ID if found")
     void testGetTraining_success() throws Exception {
         when(trainingService.getTraining(1L)).thenReturn(new TrainingDto());
 
@@ -81,6 +83,7 @@ class TrainingControllerTest {
     }
 
     @Test
+    @DisplayName("Should return 404 if training ID is not found")
     void testGetTraining_notFound() throws Exception {
         when(trainingService.getTraining(1L)).thenThrow(new NotFoundException("Not found"));
 
@@ -89,6 +92,7 @@ class TrainingControllerTest {
     }
 
     @Test
+    @DisplayName("Should return all trainings")
     void testGetAllTrainings_success() throws Exception {
         when(trainingService.getAllTrainings()).thenReturn(List.of(new TrainingDto()));
 
@@ -97,6 +101,7 @@ class TrainingControllerTest {
     }
 
     @Test
+    @DisplayName("Should return 401 if user is unauthorized to get trainings")
     void testGetAllTrainings_unauthorized() throws Exception {
         when(trainingService.getAllTrainings()).thenThrow(new UnauthorizedException("Unauthorized"));
 
@@ -104,8 +109,8 @@ class TrainingControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-
     @Test
+    @DisplayName("Should delete training by ID and return 204 No Content")
     void testDeleteTraining_success() throws Exception {
         doNothing().when(trainingService).deleteTraining(1L);
 
@@ -114,6 +119,7 @@ class TrainingControllerTest {
     }
 
     @Test
+    @DisplayName("Should return 401 if user is unauthorized to delete training")
     void testDeleteTraining_unauthorized() throws Exception {
         doThrow(new UnauthorizedException("Unauthorized"))
                 .when(trainingService).deleteTraining(1L);
@@ -123,6 +129,7 @@ class TrainingControllerTest {
     }
 
     @Test
+    @DisplayName("Should return all training types")
     void testGetAllTrainingTypes_success() throws Exception {
         when(trainingService.getAllTrainingTypes()).thenReturn(List.of(new TrainingTypeDto()));
 
@@ -131,6 +138,7 @@ class TrainingControllerTest {
     }
 
     @Test
+    @DisplayName("Should return 401 if user is unauthorized to get training types")
     void testGetAllTrainingTypes_unauthorized() throws Exception {
         when(trainingService.getAllTrainingTypes())
                 .thenThrow(new UnauthorizedException("Unauthorized"));

@@ -3,7 +3,6 @@ package com.epam.springcore.controller;
 import com.epam.springcore.request.user.ChangePasswordRequest;
 import com.epam.springcore.request.user.LoginRequest;
 import com.epam.springcore.service.IUserService;
-import com.epam.springcore.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

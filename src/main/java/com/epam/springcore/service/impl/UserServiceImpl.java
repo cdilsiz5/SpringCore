@@ -15,7 +15,6 @@ import com.epam.springcore.util.LogUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,20 +26,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserServiceImpl implements IUserService {
 
-    private UserRepository userRepository;
-    private UserMapper userMapper;
-    @Autowired
-    private CredentialGenerator credentialGenerator;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final CredentialGenerator credentialGenerator;
 
-    @Autowired
-    public void setUserRepository(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    @Autowired
-    public void setUserMapper(UserMapper userMapper) {
-        this.userMapper = userMapper;
-    }
     @Override
     public boolean login(LoginRequest request) {
         String txId = LogUtil.getTransactionId();

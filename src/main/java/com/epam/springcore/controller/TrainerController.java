@@ -6,7 +6,6 @@ import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 import com.epam.springcore.response.LoginCredentialsResponse;
 import com.epam.springcore.service.ITrainerService;
-import com.epam.springcore.service.impl.TrainerServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

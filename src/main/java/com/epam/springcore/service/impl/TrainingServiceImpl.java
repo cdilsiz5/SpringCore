@@ -15,15 +15,12 @@ import com.epam.springcore.model.Training;
 import com.epam.springcore.repository.TrainingTypeRepository;
 import com.epam.springcore.request.training.CreateTrainingRequest;
 import com.epam.springcore.request.training.UpdateTrainingRequest;
-import com.epam.springcore.service.ITraineeService;
-import com.epam.springcore.service.ITrainerService;
 import com.epam.springcore.service.ITrainingService;
 import com.epam.springcore.service.IUserService;
 import com.epam.springcore.util.LogUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.logging.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -36,48 +33,11 @@ public class TrainingServiceImpl implements ITrainingService {
 
     private static final String SYSTEM_ADMIN_USERNAME = "system-admin";
 
-    private TrainingRepository trainingRepository;
-    private TrainingMapper trainingMapper;
-    private TrainingTypeRepository trainingTypeRepository;
-    private IUserService userService;
-    private ITrainerService trainerService;
-    private ITraineeService traineeService;
-    private TrainingTypeMapper trainingTypeMapper;
-
-    @Autowired
-    public void setTrainingRepository(TrainingRepository trainingRepository) {
-        this.trainingRepository = trainingRepository;
-    }
-
-    @Autowired
-    public void setTrainingMapper(TrainingMapper trainingMapper) {
-        this.trainingMapper = trainingMapper;
-    }
-
-    @Autowired
-    public void setTrainingTypeRepository(TrainingTypeRepository trainingTypeRepository) {
-        this.trainingTypeRepository = trainingTypeRepository;
-    }
-
-    @Autowired
-    public void setUserService(IUserService userService) {
-        this.userService = userService;
-    }
-
-    @Autowired
-    public void setTrainerService(ITrainerService trainerService) {
-        this.trainerService = trainerService;
-    }
-
-    @Autowired
-    public void setTraineeService(ITraineeService traineeService) {
-        this.traineeService = traineeService;
-    }
-
-    @Autowired
-    public void setTrainingTypeMapper(TrainingTypeMapper trainingTypeMapper) {
-        this.trainingTypeMapper = trainingTypeMapper;
-    }
+    private final TrainingRepository trainingRepository;
+    private final TrainingMapper trainingMapper;
+    private final TrainingTypeRepository trainingTypeRepository;
+    private final TrainingTypeMapper trainingTypeMapper;
+    private final IUserService userService;
 
     @Override
     public TrainingDto createTraining(CreateTrainingRequest request) {
@@ -86,9 +46,6 @@ public class TrainingServiceImpl implements ITrainingService {
                 txId, request.getTrainerId(), request.getTraineeId(), request.getDate(), request.getType(), request.getDurationMinutes());
 
         Training training = new Training();
-        training.setTrainee(traineeService.getTraineeById(request.getTraineeId()));
-        training.setTrainer(trainerService.getTrainerById(request.getTrainerId()));
-
         TrainingType trainingType = trainingTypeRepository.findById(request.getType())
                 .orElseThrow(() -> {
                     log.warn("[{}] SERVICE Layer - TrainingType not found for id: {}", txId, request.getType());

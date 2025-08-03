@@ -5,13 +5,10 @@ import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.mapper.TrainerMapper;
-import com.epam.springcore.mapper.TrainingMapper;
 import com.epam.springcore.model.Trainer;
-import com.epam.springcore.model.Training;
 import com.epam.springcore.model.User;
 import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.repository.TrainerRepository;
-import com.epam.springcore.repository.TrainingRepository;
 import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 import com.epam.springcore.request.user.CreateUserRequest;
@@ -23,7 +20,6 @@ import com.epam.springcore.util.LogUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.logging.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -31,36 +27,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class TrainerServiceImpl implements ITrainerService {
 
-    private TrainerRepository trainerRepository;
-    private ITrainingService trainingService;
-    private TrainerMapper trainerMapper;
-    private IUserService userService;
+    private final TrainerRepository trainerRepository;
+    private final TrainerMapper trainerMapper;
+    private final ITrainingService trainingService;
+    private final IUserService userService;
 
-    @Autowired
-    public void setTrainerRepository(TrainerRepository trainerRepository) {
-        this.trainerRepository = trainerRepository;
-    }
-
-    @Autowired
-    public void setTrainingService(ITrainingService trainingService) {
-        this.trainingService = trainingService;
-    }
-
-    @Autowired
-    public void setTrainerMapper(TrainerMapper trainerMapper) {
-        this.trainerMapper = trainerMapper;
-    }
-
-    @Autowired
-    public void setUserService(IUserService userService) {
-        this.userService = userService;
-    }
-
-    @Override
+ @Override
     public LoginCredentialsResponse createTrainer(CreateTrainerRequest request) {
         String txId = LogUtil.getTransactionId();
         log.info("[{}] SERVICE Layer - Creating trainer via public endpoint", txId);

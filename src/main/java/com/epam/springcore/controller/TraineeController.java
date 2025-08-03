@@ -8,7 +8,6 @@ import com.epam.springcore.request.trainee.UpdateTraineeRequest;
 import com.epam.springcore.request.trainer.TrainerUsernameRequest;
 import com.epam.springcore.response.LoginCredentialsResponse;
 import com.epam.springcore.service.ITraineeService;
-import com.epam.springcore.service.impl.TraineeServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

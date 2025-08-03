@@ -23,7 +23,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.logging.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -31,39 +30,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class TraineeServiceImpl implements ITraineeService {
-    private TraineeRepository traineeRepository;
-    private TraineeMapper traineeMapper;
-    private ITrainingService trainingService;
-    private ITrainerService trainerService;
-    private IUserService userService;
 
-    @Autowired
-    public void setTraineeRepository(TraineeRepository traineeRepository) {
-        this.traineeRepository = traineeRepository;
-    }
+    private final TraineeRepository traineeRepository;
+    private final TraineeMapper traineeMapper;
+    private final ITrainingService trainingService;
+    private final ITrainerService trainerService;
+    private final IUserService userService;
 
-    @Autowired
-    public void setTraineeMapper(TraineeMapper traineeMapper) {
-        this.traineeMapper = traineeMapper;
-    }
-
-    @Autowired
-    public void setTrainingService(ITrainingService trainingService) {
-        this.trainingService = trainingService;
-    }
-
-    @Autowired
-    public void setTrainerService(ITrainerService trainerService) {
-        this.trainerService = trainerService;
-    }
-
-    @Autowired
-    public void setUserService(IUserService userService) {
-        this.userService = userService;
-    }
     @Override
     @Transactional
     public LoginCredentialsResponse createTrainee(CreateTraineeRequest request) {
