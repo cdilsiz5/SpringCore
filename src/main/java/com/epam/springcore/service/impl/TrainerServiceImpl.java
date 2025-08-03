@@ -12,6 +12,7 @@ import com.epam.springcore.repository.TrainerRepository;
 import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 import com.epam.springcore.request.user.CreateUserRequest;
+import com.epam.springcore.response.LoginCredentialsResponse;
 import com.epam.springcore.service.ITrainerService;
 import com.epam.springcore.service.ITrainingService;
 import lombok.RequiredArgsConstructor;
@@ -33,63 +34,73 @@ public class TrainerServiceImpl implements ITrainerService {
     private final UserServiceImpl userService;
 
     @Override
-    public TrainerDto createTrainer(CreateTrainerRequest request) {
+    public LoginCredentialsResponse createTrainer(CreateTrainerRequest request) {
         log.info("Creating trainer via public endpoint");
-        CreateUserRequest createUserRequest= CreateUserRequest.builder()
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .build();
         User savedUser = userService.createUserEntity(createUserRequest);
-        return createTrainerEntity(savedUser, request.getSpecialty());
-    }
+        createTrainerEntity(savedUser, request.getSpecialty());
+        return new LoginCredentialsResponse(savedUser.getUsername(), savedUser.getPassword());
+     }
 
     @Override
-    public TrainerDto getTrainerByUsername(String authUsername, String authPassword, String username) {
-        authenticate(authUsername, authPassword);
+    public TrainerDto getTrainerByUsername(String username) {
+        validate(username);
         log.info("Fetching Trainer by username: {}", username);
-        return trainerMapper.toTrainerDto(getTrainerEntityByUsername(username));
+        TrainerDto dto = trainerMapper.toTrainerDto(getTrainerEntityByUsername(username));
+        userService.logout(username);
+        return dto;
     }
 
     @Override
-    public List<TrainerDto> getAllTrainers(String authUsername, String authPassword) {
-        authenticate(authUsername, authPassword);
+    public List<TrainerDto> getAllTrainers() {
+        String username = "__system__";
+        validate(username);
         log.info("Fetching all trainers");
-        return trainerMapper.toTrainerDtoList(trainerRepository.findAll());
+        List<TrainerDto> dtoList = trainerMapper.toTrainerDtoList(trainerRepository.findAll());
+        userService.logout(username);
+        return dtoList;
     }
 
     @Override
-    public TrainerDto updateTrainer(String authUsername, String authPassword, String username, UpdateTrainerRequest request) {
-        authenticate(authUsername, authPassword);
+    public TrainerDto updateTrainer(String username, UpdateTrainerRequest request) {
+        validate(username);
         log.info("Updating Trainer with username: {}", username);
         Trainer trainer = getTrainerEntityByUsername(username);
         trainerMapper.updateTrainerRequest(request, trainer);
         Trainer updatedTrainer = trainerRepository.save(trainer);
         log.info("Trainer updated. ID: {}", updatedTrainer.getId());
+        userService.logout(username);
         return trainerMapper.toTrainerDto(updatedTrainer);
     }
 
     @Override
-    public void deleteTrainer(String authUsername, String authPassword, String username) {
-        authenticate(authUsername, authPassword);
+    public void deleteTrainer(String username) {
+        validate(username);
         log.info("Deleting Trainer with username: {}", username);
         Trainer trainer = getTrainerEntityByUsername(username);
         trainerRepository.delete(trainer);
         log.info("Trainer deleted. ID: {}", trainer.getId());
+        userService.logout(username);
     }
 
     @Override
-    public void toggleActivation(String authUsername, String authPassword, String username) {
-        authenticate(authUsername, authPassword);
+    public void toggleActivation(String username) {
+        validate(username);
         log.info("Toggling activation for user: {}", username);
         userService.activateOrDeactivate(username);
+        userService.logout(username);
     }
 
     @Override
-    public List<TrainingDto> getTrainingHistory(String authUsername, String authPassword, String username, LocalDate from, LocalDate to, String traineeName, String traineeLastName) {
-        authenticate(authUsername, authPassword);
+    public List<TrainingDto> getTrainingHistory(String username, LocalDate from, LocalDate to, String traineeName, String traineeLastName) {
+        validate(username);
         log.info("Fetching training history for trainer: {}", username);
         Trainer trainer = getTrainerEntityByUsername(username);
-        return trainingService.findAllByTrainer(trainer).stream()
+
+        List<TrainingDto> result = trainingService.findAllByTrainer(trainer).stream()
                 .filter(t -> from == null || !t.getDate().isBefore(from))
                 .filter(t -> to == null || !t.getDate().isAfter(to))
                 .filter(t -> {
@@ -101,10 +112,13 @@ public class TrainerServiceImpl implements ITrainerService {
                     return firstMatch && lastMatch;
                 })
                 .collect(Collectors.toList());
+
+        userService.logout(username);
+        return result;
     }
 
-    @Override
-    public TrainerDto createTrainerEntity(User user, Specialization specialty) {
+
+    private TrainerDto createTrainerEntity(User user, Specialization specialty) {
         log.info("Creating Trainer entity for user ID: {}, specialization: {}", user.getId(), specialty);
         Trainer trainer = Trainer.builder()
                 .specialization(specialty)
@@ -133,12 +147,9 @@ public class TrainerServiceImpl implements ITrainerService {
                 });
     }
 
-    private void authenticate(String username, String password) {
-        if (!userService.authenticate(username, password)) {
-            log.warn("Authentication failed for user: {}", username);
-            throw new UnauthorizedException("Unauthorized: invalid username or password");
+    private void validate(String username) {
+        if (!userService.isAuthenticated(username)) {
+            throw new UnauthorizedException("User not authenticated: " + username);
         }
-
-
     }
 }

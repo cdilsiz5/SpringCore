@@ -1,18 +1,23 @@
 package com.epam.springcore.service.impl;
 
 import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.mapper.TraineeMapper;
-import com.epam.springcore.model.Trainee;
-import com.epam.springcore.model.User;
+import com.epam.springcore.model.*;
 import com.epam.springcore.repository.TraineeRepository;
 import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
+import com.epam.springcore.request.trainer.TrainerUsernameRequest;
+import com.epam.springcore.request.training.CreateTrainingRequest;
 import com.epam.springcore.request.user.CreateUserRequest;
+import com.epam.springcore.response.LoginCredentialsResponse;
 import com.epam.springcore.service.ITraineeService;
+import com.epam.springcore.service.ITrainerService;
 import com.epam.springcore.service.ITrainingService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,67 +33,75 @@ public class TraineeServiceImpl implements ITraineeService {
 
     private final TraineeRepository traineeRepository;
     private final ITrainingService trainingService;
+    private final ITrainerService trainerService;
     private final TraineeMapper traineeMapper;
     private final UserServiceImpl userService;
 
     @Override
-    public TraineeDto createTrainee(CreateTraineeRequest request) {
+    @Transactional
+    public LoginCredentialsResponse createTrainee(CreateTraineeRequest request) {
         log.info("Creating trainee via public endpoint");
         CreateUserRequest createUserRequest = CreateUserRequest.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .build();
         User savedUser = userService.createUserEntity(createUserRequest);
-        return createTraineeEntity(savedUser);
+        createTraineeEntity(savedUser, request);
+        return new LoginCredentialsResponse(savedUser.getUsername(), savedUser.getPassword());
     }
 
     @Override
-    public TraineeDto getTraineeByUsername(String authUsername, String authPassword, String username) {
-        authenticate(authUsername, authPassword);
+    public TraineeDto getTraineeByUsername(String username) {
+        validate(username);
         log.info("Fetching Trainee by username: {}", username);
-        return traineeMapper.toTraineeDto(getTraineeEntityByUsername(username));
+        TraineeDto dto = traineeMapper.toTraineeDto(getTraineeEntityByUsername(username));
+        userService.logout(username);
+        return dto;
     }
 
     @Override
-    public List<TraineeDto> getAllTrainees(String authUsername, String authPassword) {
-        authenticate(authUsername, authPassword);
+    public List<TraineeDto> getAllTrainees() {
         log.info("Fetching all trainees");
         return traineeMapper.toTraineeDtoList(traineeRepository.findAll());
-    }
+     }
 
     @Override
-    public TraineeDto updateTrainee(String authUsername, String authPassword, String username, UpdateTraineeRequest request) {
-        authenticate(authUsername, authPassword);
+    public TraineeDto updateTrainee(String username, UpdateTraineeRequest request) {
+        validate(username);
         log.info("Updating Trainee with username: {}", username);
         Trainee trainee = getTraineeEntityByUsername(username);
         traineeMapper.updateTraineeRequest(request, trainee);
         Trainee updatedTrainee = traineeRepository.save(trainee);
         log.info("Trainee updated. ID: {}", updatedTrainee.getId());
+        userService.logout(username);
         return traineeMapper.toTraineeDto(updatedTrainee);
     }
 
     @Override
-    public void deleteTrainee(String authUsername, String authPassword, String username) {
-        authenticate(authUsername, authPassword);
+    public void deleteTrainee(String username) {
+        validate(username);
         log.info("Deleting Trainee with username: {}", username);
         Trainee trainee = getTraineeEntityByUsername(username);
         traineeRepository.delete(trainee);
         log.info("Trainee deleted. ID: {}", trainee.getId());
+        userService.logout(username);
     }
 
     @Override
-    public void toggleActivation(String authUsername, String authPassword, String username) {
-        authenticate(authUsername, authPassword);
+    public void toggleActivation(String username) {
+        validate(username);
         log.info("Toggling activation for user: {}", username);
         userService.activateOrDeactivate(username);
+        userService.logout(username);
     }
 
     @Override
-    public List<TrainingDto> getTrainingHistory(String authUsername, String authPassword, String username, LocalDate from, LocalDate to, String trainerName, String trainerLastName) {
-        authenticate(authUsername, authPassword);
+    public List<TrainingDto> getTrainingHistory(String username, LocalDate from, LocalDate to, String trainerName, String trainerLastName) {
+        validate(username);
         log.info("Fetching training history for trainee: {}", username);
         Trainee trainee = getTraineeEntityByUsername(username);
-        return trainingService.findAllByTrainee(trainee).stream()
+
+        List<TrainingDto> result = trainingService.findAllByTrainee(trainee).stream()
                 .filter(t -> from == null || !t.getDate().isBefore(from))
                 .filter(t -> to == null || !t.getDate().isAfter(to))
                 .filter(t -> {
@@ -100,18 +113,71 @@ public class TraineeServiceImpl implements ITraineeService {
                     return firstMatch && lastMatch;
                 })
                 .collect(Collectors.toList());
+
+        userService.logout(username);
+        return result;
+    }
+    @Override
+    public List<TrainerDto> getUnassignedTrainers(String authUsername) {
+        validate(authUsername);
+        log.info("Fetching unassigned trainers for trainee: {}", authUsername);
+
+        Trainee trainee = getTraineeEntityByUsername(authUsername);
+        List<TrainerDto> allTrainers = trainerService.getAllTrainers();
+
+        List<TrainerDto> unassigned = allTrainers.stream()
+                .filter(trainer -> !trainer.getTrainings().stream()
+                        .anyMatch(training -> training.getTrainee().equals(trainee)))
+                .collect(Collectors.toList());
+
+        userService.logout(authUsername);
+        return unassigned;
     }
 
     @Override
-    public TraineeDto createTraineeEntity(User user) {
-        log.info("Creating Trainee entity for user ID: {}", user.getId());
-        Trainee trainee = Trainee.builder()
-                .user(user)
-                .build();
-        Trainee savedTrainee = traineeRepository.save(trainee);
-        log.info("Trainee saved with ID: {}", savedTrainee.getId());
-        return traineeMapper.toTraineeDto(savedTrainee);
+    @Transactional
+    public List<TrainerDto> updateTrainerList(String username, List<TrainerUsernameRequest> requestList) {
+        validate(username);
+        log.info("Updating trainer list for trainee: {}", username);
+
+        Trainee trainee = getTraineeEntityByUsername(username);
+
+        // Remove current assignments
+        List<TrainingDto> currentTrainings = trainingService.findAllByTrainee(trainee).stream()
+                .filter(training -> training.getTrainer() != null)
+                .collect(Collectors.toList());
+
+        for (TrainingDto training : currentTrainings) {
+            training.setTrainer(null);
+        }
+
+        // Assign new trainers
+        List<TrainerDto> assignedTrainers = requestList.stream()
+                .map(req -> {
+                    TrainerDto trainerDto = trainerService.getTrainerByUsername(req.getUsername());
+                    Trainer trainer = trainerService.getTrainerById(trainerDto.getId());
+
+                    TrainingType trainingType = trainingService.findTrainingTypeByName(trainer.getSpecialization());
+
+                    CreateTrainingRequest createRequest = CreateTrainingRequest.builder()
+                            .traineeId(trainee.getId())
+                            .trainerId(trainer.getId())
+                            .type(trainingType.getId())
+                            .date(LocalDate.now().toString())
+                            .durationMinutes(30)
+                            .build();
+
+
+                    trainingService.createTraining(createRequest);
+                    return trainerDto;
+                })
+                .collect(Collectors.toList());
+
+        log.info("Trainer list updated for trainee '{}': {} trainers assigned", username, assignedTrainers.size());
+        userService.logout(username);
+        return assignedTrainers;
     }
+
 
     @Override
     public Trainee getTraineeById(Long traineeId) {
@@ -131,10 +197,21 @@ public class TraineeServiceImpl implements ITraineeService {
                 });
     }
 
-    private void authenticate(String username, String password) {
-        if (!userService.authenticate(username, password)) {
-            log.warn("Authentication failed for user: {}", username);
-            throw new UnauthorizedException("Unauthorized: invalid username or password");
+    private void validate(String authUsername) {
+        if (!userService.isAuthenticated(authUsername)) {
+            throw new UnauthorizedException("User not authenticated: " + authUsername);
         }
+    }
+
+    private TraineeDto createTraineeEntity(User user, CreateTraineeRequest request) {
+        log.info("Creating Trainee entity for user ID: {}", user.getId());
+        Trainee trainee = Trainee.builder()
+                .user(user)
+                .address(request.getAddress())
+                .dateOfBirth(request.getDateOfBirth())
+                .build();
+        Trainee savedTrainee = traineeRepository.save(trainee);
+        log.info("Trainee saved with ID: {}", savedTrainee.getId());
+        return traineeMapper.toTraineeDto(savedTrainee);
     }
 }

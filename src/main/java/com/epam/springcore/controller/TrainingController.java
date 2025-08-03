@@ -1,6 +1,7 @@
 package com.epam.springcore.controller;
 
 import com.epam.springcore.dto.TrainingDto;
+import com.epam.springcore.dto.TrainingTypeDto;
 import com.epam.springcore.request.training.CreateTrainingRequest;
 import com.epam.springcore.request.training.UpdateTrainingRequest;
 import com.epam.springcore.service.impl.TrainingServiceImpl;
@@ -17,11 +18,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.epam.springcore.constants.Constant.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(API_PREFIX +API_EPAM+API_VERSION_V1 + API_TRAINING)
+@RequestMapping("/api/epam/v1/trainings")
 @Tag(name = "Training Resource", description = "SpringCore REST APIs for Trainings")
 public class TrainingController {
 
@@ -89,4 +89,13 @@ public class TrainingController {
     public void deleteTraining(@PathVariable Long id) {
         trainingService.deleteTraining(id);
     }
+
+    @Operation(summary = "List all training types", description = "Get all supported training types")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "List of training types"))
+    @GetMapping("/training-types")
+    @ResponseStatus(HttpStatus.OK)
+    public List<TrainingTypeDto> getAllTrainingTypes() {
+        return trainingService.getAllTrainingTypes();
+    }
+
 }

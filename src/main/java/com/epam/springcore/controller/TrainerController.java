@@ -4,6 +4,7 @@ import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
+import com.epam.springcore.response.LoginCredentialsResponse;
 import com.epam.springcore.service.impl.TrainerServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,16 +17,16 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import static com.epam.springcore.constants.Constant.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(API_PREFIX + API_EPAM + API_VERSION_V1 + API_TRAINER)
+@RequestMapping("/api/epam/v1/trainers")
 @Tag(name = "Trainer Resource", description = "SpringCore REST APIs for Trainers")
 public class TrainerController {
 
@@ -37,8 +38,8 @@ public class TrainerController {
                     schema = @Schema(implementation = TrainerDto.class))))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TrainerDto createTrainer(@RequestBody @Valid CreateTrainerRequest request) {
-        return trainerService.createTrainer(request);
+    public ResponseEntity<LoginCredentialsResponse> createTrainer(@RequestBody @Valid CreateTrainerRequest request) {
+        return ResponseEntity.ok(trainerService.createTrainer(request));
     }
 
     @Operation(summary = "Get trainer by username", description = "Fetch a trainer by username")
@@ -47,10 +48,8 @@ public class TrainerController {
                     schema = @Schema(implementation = TrainerDto.class))))
     @GetMapping("/{username}")
     @ResponseStatus(HttpStatus.OK)
-    public TrainerDto getTrainerByUsername(@PathVariable String username,
-                                           @RequestHeader("X-Username") String authUser,
-                                           @RequestHeader("X-Password") String authPass) {
-        return trainerService.getTrainerByUsername(authUser, authPass, username);
+    public TrainerDto getTrainerByUsername(@PathVariable String username) {
+        return trainerService.getTrainerByUsername( username);
     }
 
     @Operation(summary = "Get all trainers", description = "Retrieve all trainers")
@@ -59,9 +58,8 @@ public class TrainerController {
                     schema = @Schema(implementation = TrainerDto.class))))
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<TrainerDto> getAllTrainers(@RequestHeader("X-Username") String authUser,
-                                           @RequestHeader("X-Password") String authPass) {
-        return trainerService.getAllTrainers(authUser, authPass);
+    public List<TrainerDto> getAllTrainers() {
+        return trainerService.getAllTrainers();
     }
 
     @Operation(summary = "Update trainer", description = "Update trainer details")
@@ -71,30 +69,25 @@ public class TrainerController {
     @PutMapping("/{username}")
     @ResponseStatus(HttpStatus.OK)
     public TrainerDto updateTrainer(@PathVariable String username,
-                                    @RequestHeader("X-Username") String authUser,
-                                    @RequestHeader("X-Password") String authPass,
+
                                     @RequestBody @Valid UpdateTrainerRequest request) {
-        return trainerService.updateTrainer(authUser, authPass, username, request);
+        return trainerService.updateTrainer( username, request);
     }
 
     @Operation(summary = "Delete trainer", description = "Delete a trainer by username")
     @ApiResponses(@ApiResponse(responseCode = "204", description = "No Content"))
     @DeleteMapping("/{username}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTrainer(@PathVariable String username,
-                              @RequestHeader("X-Username") String authUser,
-                              @RequestHeader("X-Password") String authPass) {
-        trainerService.deleteTrainer(authUser, authPass, username);
+    public void deleteTrainer(@PathVariable String username) {
+        trainerService.deleteTrainer(username);
     }
 
     @Operation(summary = "Toggle trainer activation", description = "Activate/deactivate trainer account")
     @ApiResponses(@ApiResponse(responseCode = "200", description = "Status toggled"))
     @PatchMapping("/{username}/toggle-activation")
     @ResponseStatus(HttpStatus.OK)
-    public void toggleActivation(@PathVariable String username,
-                                 @RequestHeader("X-Username") String authUser,
-                                 @RequestHeader("X-Password") String authPass) {
-        trainerService.toggleActivation(authUser, authPass, username);
+    public void toggleActivation(@PathVariable String username) {
+        trainerService.toggleActivation(username);
     }
 
 
@@ -111,8 +104,6 @@ public class TrainerController {
     @ResponseStatus(HttpStatus.OK)
     public List<TrainingDto> getTrainingHistory(
             @PathVariable String username,
-            @RequestHeader("X-Username") String authUser,
-            @RequestHeader("X-Password") String authPass,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             @Parameter(description = "Start date (yyyy-MM-dd)", example = "2024-01-01")
@@ -128,7 +119,9 @@ public class TrainerController {
             @Parameter(description = "Trainee Last Name", example = "Veli")
             String traineeLastName
     ) {
-        return trainerService.getTrainingHistory(authUser, authPass, username, from, to, traineeName, traineeLastName);
+        return trainerService.getTrainingHistory( username, from, to, traineeName, traineeLastName);
     }
+
+
 
 }

@@ -1,8 +1,11 @@
 package com.epam.springcore.service;
 
 import com.epam.springcore.dto.TrainingDto;
+import com.epam.springcore.dto.TrainingTypeDto;
 import com.epam.springcore.model.Trainee;
 import com.epam.springcore.model.Trainer;
+import com.epam.springcore.model.TrainingType;
+import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.request.training.CreateTrainingRequest;
 import com.epam.springcore.request.training.UpdateTrainingRequest;
 
@@ -67,6 +70,22 @@ public interface ITrainingService {
      * @return the corresponding TrainingDto List
      */
     List<TrainingDto> findAllByTrainee(Trainee trainee);
+
+    /**
+     * Retrieves the TrainingType entity for the given specialization.
+     *
+     * @param name the specialization enum
+     * @return the TrainingType entity
+     */
+    TrainingType findTrainingTypeByName(Specialization name);
+
+    /**
+     * Retrieves all available training types in the system.
+     *
+     * @return list of TrainingType entities
+     */
+    List<TrainingTypeDto> getAllTrainingTypes();
+
 
 
 }

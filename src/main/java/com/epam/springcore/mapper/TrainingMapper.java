@@ -14,7 +14,7 @@ public interface TrainingMapper {
 
     TrainingDto toTrainingDto(Training training);
 
-    List<TrainingDto> toTrainingDtoList(List<Training> trainings);
+    List<TrainingDto> toTrainingDtoList(List<Training> trainingType);
 
     Training createTraining(CreateTrainingRequest request);
 

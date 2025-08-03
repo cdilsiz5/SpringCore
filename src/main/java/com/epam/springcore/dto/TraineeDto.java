@@ -14,4 +14,5 @@ public class TraineeDto {
     private LocalDate dateOfBirth;
     private UserDto user;
     private List<TrainerDto> trainers;
+    private List<TrainingDto> trainings;
 }
