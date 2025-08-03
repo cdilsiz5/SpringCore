@@ -3,10 +3,9 @@ package com.epam.springcore.service;
 import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Trainer;
-import com.epam.springcore.model.User;
-import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
+import com.epam.springcore.response.LoginCredentialsResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,61 +18,49 @@ public interface ITrainerService {
      * @param request trainer creation request
      * @return created TrainerDto
      */
-    TrainerDto createTrainer(CreateTrainerRequest request);
+    LoginCredentialsResponse createTrainer(CreateTrainerRequest request);
 
     /**
      * Retrieves a trainer by username.
      *
-     * @param authUsername requester username (from header)
-     * @param authPassword requester password (from header)
      * @param username trainer username
      * @return trainer dto
      */
-    TrainerDto getTrainerByUsername(String authUsername, String authPassword, String username);
+    TrainerDto getTrainerByUsername(String username);
 
     /**
      * Returns all trainers (requires authentication).
      *
-     * @param authUsername requester username
-     * @param authPassword requester password
      * @return list of all trainers
      */
-    List<TrainerDto> getAllTrainers(String authUsername, String authPassword);
+    List<TrainerDto> getAllTrainers();
 
     /**
      * Updates trainer by username (requires authentication).
      *
-     * @param authUsername requester username
-     * @param authPassword requester password
      * @param username trainer username to update
      * @param request update payload
      * @return updated trainer dto
      */
-    TrainerDto updateTrainer(String authUsername, String authPassword, String username, UpdateTrainerRequest request);
+    TrainerDto updateTrainer( String username, UpdateTrainerRequest request);
 
     /**
      * Deletes a trainer by username (requires authentication).
      *
-     * @param authUsername requester username
-     * @param authPassword requester password
      * @param username trainer username to delete
      */
-    void deleteTrainer(String authUsername, String authPassword, String username);
+    void deleteTrainer( String username);
 
     /**
      * Toggles trainer's active status (requires authentication).
      *
-     * @param authUsername requester username
-     * @param authPassword requester password
      * @param username trainer username to toggle
      */
-    void toggleActivation(String authUsername, String authPassword, String username);
+    void toggleActivation( String username);
 
     /**
      * Returns a trainer's training history with optional filters (requires authentication).
      *
-     * @param authUsername requester username
-     * @param authPassword requester password
      * @param username trainer username whose trainings to fetch
      * @param from start date (optional)
      * @param to end date (optional)
@@ -82,8 +69,6 @@ public interface ITrainerService {
      * @return list of matching trainings
      */
     List<TrainingDto> getTrainingHistory(
-            String authUsername,
-            String authPassword,
             String username,
             LocalDate from,
             LocalDate to,
@@ -91,14 +76,6 @@ public interface ITrainerService {
             String traineeLastName
     );
 
-    /**
-     * Creates a trainer entity from a given user and specialization (used internally).
-     *
-     * @param user user entity
-     * @param specialty specialization
-     * @return created trainer dto
-     */
-    TrainerDto createTrainerEntity(User user, Specialization specialty);
 
     /**
      * Returns the Trainer entity by ID (used internally).
@@ -107,4 +84,6 @@ public interface ITrainerService {
      * @return trainer entity
      */
     Trainer getTrainerById(Long trainerId);
+
+
 }

@@ -1,13 +1,16 @@
 package com.epam.springcore.controller;
 
-
 import com.epam.springcore.dto.TrainingDto;
+import com.epam.springcore.dto.TrainingTypeDto;
 import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
+import com.epam.springcore.filter.TransactionIdFilter;
 import com.epam.springcore.request.training.CreateTrainingRequest;
-import com.epam.springcore.request.training.UpdateTrainingRequest;
-import com.epam.springcore.service.impl.TrainingServiceImpl;
+import com.epam.springcore.service.ITrainingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,21 +19,20 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-public class TrainingControllerTest {
+class TrainingControllerTest {
 
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
     @Mock
-    private TrainingServiceImpl trainingService;
+    private ITrainingService trainingService;
 
     private static final String BASE_URL = "/api/epam/v1/trainings";
 
@@ -40,30 +42,32 @@ public class TrainingControllerTest {
         TrainingController controller = new TrainingController(trainingService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .addFilters(new TransactionIdFilter())
                 .build();
 
         objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     @Test
-    @DisplayName("POST /trainings - Success")
+    @DisplayName("Should create a new training and return 201 Created")
     void testCreateTraining_success() throws Exception {
-        CreateTrainingRequest request = new CreateTrainingRequest(1L, 2L, "2025-07-01", 2L, 30);
-        TrainingDto responseDto = TrainingDto.builder().id(1L).duration(30).build();
+        CreateTrainingRequest request = new CreateTrainingRequest(1L, 2L, "2025-01-01", 1L, 45);
+        TrainingDto response = new TrainingDto();
 
-        when(trainingService.createTraining(any(CreateTrainingRequest.class))).thenReturn(responseDto);
+        when(trainingService.createTraining(any())).thenReturn(response);
 
         mockMvc.perform(post(BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1));
+                .andExpect(status().isCreated());
     }
 
     @Test
-    @DisplayName("POST /trainings - Validation Error")
+    @DisplayName("Should return 400 Bad Request if training data is invalid")
     void testCreateTraining_validationError() throws Exception {
-        CreateTrainingRequest request = new CreateTrainingRequest();
+        CreateTrainingRequest request = new CreateTrainingRequest(null, null, "", null, 0);
 
         mockMvc.perform(post(BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -72,69 +76,43 @@ public class TrainingControllerTest {
     }
 
     @Test
-    @DisplayName("GET /trainings/{id} - Success")
-    void testGetTrainingById_success() throws Exception {
-        TrainingDto trainingDto = TrainingDto.builder().id(1L).build();
-        when(trainingService.getTraining(1L)).thenReturn(trainingDto);
+    @DisplayName("Should return training by ID if found")
+    void testGetTraining_success() throws Exception {
+        when(trainingService.getTraining(1L)).thenReturn(new TrainingDto());
 
         mockMvc.perform(get(BASE_URL + "/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
+                .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("GET /trainings/{id} - Not Found")
-    void testGetTrainingById_notFound() throws Exception {
-        when(trainingService.getTraining(99L)).thenThrow(new NotFoundException("Training not found"));
+    @DisplayName("Should return 404 if training ID is not found")
+    void testGetTraining_notFound() throws Exception {
+        when(trainingService.getTraining(1L)).thenThrow(new NotFoundException("Not found"));
 
-        mockMvc.perform(get(BASE_URL + "/99"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Training not found"));
+        mockMvc.perform(get(BASE_URL + "/1"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    @DisplayName("GET /trainings - All Trainings")
+    @DisplayName("Should return all trainings")
     void testGetAllTrainings_success() throws Exception {
-        TrainingDto dto = TrainingDto.builder().id(1L).build();
-        when(trainingService.getAllTrainings()).thenReturn(List.of(dto));
+        when(trainingService.getAllTrainings()).thenReturn(List.of(new TrainingDto()));
 
         mockMvc.perform(get(BASE_URL))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1));
+                .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("PUT /trainings/{id} - Update Success")
-    void testUpdateTraining_success() throws Exception {
-        UpdateTrainingRequest request = new UpdateTrainingRequest("1", "2", "2025-08-01", 2L, 45);
-        TrainingDto dto = TrainingDto.builder().id(1L).duration(45).build();
+    @DisplayName("Should return 401 if user is unauthorized to get trainings")
+    void testGetAllTrainings_unauthorized() throws Exception {
+        when(trainingService.getAllTrainings()).thenThrow(new UnauthorizedException("Unauthorized"));
 
-        when(trainingService.updateTraining(eq(1L), any(UpdateTrainingRequest.class))).thenReturn(dto);
-
-        mockMvc.perform(put(BASE_URL + "/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.duration").value(45));
+        mockMvc.perform(get(BASE_URL))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("PUT /trainings/{id} - Not Found")
-    void testUpdateTraining_notFound() throws Exception {
-        UpdateTrainingRequest request = new UpdateTrainingRequest("1", "2", "2025-08-01", 2L, 45);
-
-        when(trainingService.updateTraining(eq(99L), any(UpdateTrainingRequest.class)))
-                .thenThrow(new NotFoundException("Training not found"));
-
-        mockMvc.perform(put(BASE_URL + "/99")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Training not found"));
-    }
-
-    @Test
-    @DisplayName("DELETE /trainings/{id} - Success")
+    @DisplayName("Should delete training by ID and return 204 No Content")
     void testDeleteTraining_success() throws Exception {
         doNothing().when(trainingService).deleteTraining(1L);
 
@@ -143,13 +121,31 @@ public class TrainingControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /trainings/{id} - Not Found")
-    void testDeleteTraining_notFound() throws Exception {
-        doThrow(new NotFoundException("Training not found"))
-                .when(trainingService).deleteTraining(99L);
+    @DisplayName("Should return 401 if user is unauthorized to delete training")
+    void testDeleteTraining_unauthorized() throws Exception {
+        doThrow(new UnauthorizedException("Unauthorized"))
+                .when(trainingService).deleteTraining(1L);
 
-        mockMvc.perform(delete(BASE_URL + "/99"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Training not found"));
+        mockMvc.perform(delete(BASE_URL + "/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Should return all training types")
+    void testGetAllTrainingTypes_success() throws Exception {
+        when(trainingService.getAllTrainingTypes()).thenReturn(List.of(new TrainingTypeDto()));
+
+        mockMvc.perform(get(BASE_URL + "/training-types"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Should return 401 if user is unauthorized to get training types")
+    void testGetAllTrainingTypes_unauthorized() throws Exception {
+        when(trainingService.getAllTrainingTypes())
+                .thenThrow(new UnauthorizedException("Unauthorized"));
+
+        mockMvc.perform(get(BASE_URL + "/training-types"))
+                .andExpect(status().isUnauthorized());
     }
 }

@@ -2,8 +2,9 @@ package com.epam.springcore.service;
 
 import com.epam.springcore.dto.UserDto;
 import com.epam.springcore.model.User;
+import com.epam.springcore.request.user.ChangePasswordRequest;
 import com.epam.springcore.request.user.CreateUserRequest;
-import com.epam.springcore.request.user.UpdatePasswordRequest;
+import com.epam.springcore.request.user.LoginRequest;
 
 import java.util.List;
 
@@ -12,14 +13,37 @@ import java.util.List;
  */
 public interface IUserService {
 
+
     /**
-     * Verifies the credentials of a user. Throws an exception if authentication fails.
+     * Logs in the user by validating credentials and activating the session.
      *
-     * @param username the username provided in the request header
-     * @param password the password provided in the request header
-     * @throws com.epam.springcore.exception.UnauthorizedException if the credentials are invalid or user is not active
+     * @param request the login request containing username and password
+     * @return true if login is successful
      */
-    boolean authenticate(String username, String password);
+    boolean login(LoginRequest request);
+
+    /**
+     * Logs out the user by setting their isActive flag to false.
+     *
+     * @param username the username of the user to be logged out
+     */
+    void logout(String username);
+
+    /**
+     * Checks if the user is authenticated (i.e., isActive == true).
+     *
+     * @param username the username to check
+     * @return true if user is authenticated
+     */
+    boolean isAuthenticated(String username);
+
+    /**
+     * Changes the password of a user after validating the old password.
+     *
+     * @param request the change password request
+     */
+    void changePassword(ChangePasswordRequest request);
+
 
     /**
      * Retrieves a user by their username.
@@ -42,13 +66,6 @@ public interface IUserService {
      */
     void deleteUser(String targetUsername);
 
-    /**
-     * Updates the password for the currently authenticated user.
-     *
-     * @param request the request body containing old and new password
-     * @return UserDto with updated password information (masked in DTO)
-     */
-    UserDto updatePassword(String username, UpdatePasswordRequest request);
 
     /**
      * Toggles the active/passive status of the specified user.

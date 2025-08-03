@@ -6,194 +6,286 @@ import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.mapper.UserMapper;
 import com.epam.springcore.model.User;
 import com.epam.springcore.repository.UserRepository;
-import com.epam.springcore.request.user.CreateUserRequest;
-import com.epam.springcore.request.user.UpdatePasswordRequest;
+import com.epam.springcore.request.user.ChangePasswordRequest;
+import com.epam.springcore.request.user.LoginRequest;
 import com.epam.springcore.util.CredentialGenerator;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.slf4j.MDC;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-
-@DisplayName("Unit Tests for UserServiceImpl")
-public class UserServiceImplTest {
+class UserServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
 
     @Mock
-    private CredentialGenerator credentialGenerator;
+    private UserMapper userMapper;
 
     @Mock
-    private UserMapper userMapper;
+    private CredentialGenerator credentialGenerator;
 
     @InjectMocks
     private UserServiceImpl userService;
 
+    private User testUser;
+    private UserDto testUserDto;
+    private LoginRequest loginRequest;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-    }
+        MDC.put("transactionId", "TEST-TX-001");
 
-    @Test
-    @DisplayName("authenticate - returns true for valid credentials and active user")
-    void shouldAuthenticateSuccessfully_WhenCredentialsValid() {
-        User user = User.builder()
-                .username("Cihan.Dilsiz")
-                .password("1234")
-                .userActive(true)
-                .build();
-
-        when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
-
-        boolean result = userService.authenticate("Cihan.Dilsiz", "1234");
-        assertTrue(result);
-    }
-
-    @Test
-    @DisplayName("authenticate - returns false when password is incorrect")
-    void shouldFailAuthentication_WhenPasswordIncorrect() {
-        User user = User.builder()
-                .username("Cihan.Dilsiz")
-                .password("correct-pass")
-                .userActive(true)
-                .build();
-
-        when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
-
-        boolean result = userService.authenticate("Cihan.Dilsiz", "wrong-pass");
-        assertFalse(result);
-    }
-
-    @Test
-    @DisplayName("authenticate - returns false when user is inactive")
-    void shouldFailAuthentication_WhenUserIsInactive() {
-        User user = User.builder()
-                .username("Cihan.Dilsiz")
-                .password("1234")
+        testUser = User.builder()
+                .id(1L)
+                .username("john.doe")
+                .password("password123")
+                .firstName("John")
+                .lastName("Doe")
                 .userActive(false)
                 .build();
 
-        when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
+        testUserDto = UserDto.builder()
+                .id(1L)
+                .username("john.doe")
+                .firstName("John")
+                .lastName("Doe")
+                .userActive(false)
+                .build();
 
-        boolean result = userService.authenticate("Cihan.Dilsiz", "1234");
-        assertFalse(result);
+        loginRequest = LoginRequest.builder()
+                .username("john.doe")
+                .password("password123")
+                .build();
+    }
+
+
+    @Test
+    void login_ShouldReturnTrue_WhenCredentialsAreValid() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        boolean result = userService.login(loginRequest);
+
+        assertTrue(result);
+        assertTrue(testUser.isUserActive());
+        verify(userRepository).save(testUser);
     }
 
     @Test
-    @DisplayName("authenticate - returns false when user not found")
-    void shouldFailAuthentication_WhenUserNotFound() {
-        when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+    void login_ShouldThrowInvalidCredentialsException_WhenUserNotFound() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-        boolean result = userService.authenticate("unknown", "any");
-        assertFalse(result);
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> userService.login(loginRequest)
+        );
+
+        assertEquals("Invalid username or password", exception.getMessage());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("getUserByUsername - should return user when exists")
-    void shouldReturnUser_WhenExists() {
-        User user = User.builder().username("Cihan.Dilsiz").build();
-        UserDto dto = UserDto.builder().username("Cihan.Dilsiz").build();
+    void login_ShouldThrowInvalidCredentialsException_WhenPasswordIsWrong() {
+        testUser.setPassword("differentPassword");
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.of(testUser));
 
-        when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
-        when(userMapper.toUserDto(user)).thenReturn(dto);
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> userService.login(loginRequest)
+        );
 
-        UserDto result = userService.getUserByUsername("Cihan.Dilsiz");
+        assertEquals("Invalid password", exception.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void logout_ShouldThrowNotFoundException_WhenUserNotFound() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> userService.logout("john.doe")
+        );
+
+        assertEquals("User not found: john.doe", exception.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+
+    @Test
+    void isAuthenticated_ShouldThrowNotFoundException_WhenUserNotFound() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> userService.isAuthenticated("john.doe")
+        );
+
+        assertEquals("User not found: john.doe", exception.getMessage());
+    }
+
+    @Test
+    void changePassword_ShouldUpdatePassword_WhenOldPasswordIsCorrect() {
+        ChangePasswordRequest request = ChangePasswordRequest.builder()
+                .username("john.doe")
+                .oldPassword("password123")
+                .newPassword("newPassword456")
+                .build();
+
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        userService.changePassword(request);
+
+        assertEquals("newPassword456", testUser.getPassword());
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void changePassword_ShouldThrowInvalidCredentialsException_WhenOldPasswordIsWrong() {
+        ChangePasswordRequest request = ChangePasswordRequest.builder()
+                .username("john.doe")
+                .oldPassword("wrongPassword")
+                .newPassword("newPassword456")
+                .build();
+
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.of(testUser));
+
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> userService.changePassword(request)
+        );
+
+        assertEquals("Old password does not match", exception.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+
+    @Test
+    void getUserByUsername_ShouldReturnUserDto_WhenUserExists() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.of(testUser));
+        when(userMapper.toUserDto(testUser)).thenReturn(testUserDto);
+
+        UserDto result = userService.getUserByUsername("john.doe");
+
         assertNotNull(result);
-        assertEquals("Cihan.Dilsiz", result.getUsername());
+        assertEquals("john.doe", result.getUsername());
+        assertEquals("John", result.getFirstName());
+        assertEquals("Doe", result.getLastName());
     }
 
     @Test
-    @DisplayName("getUserByUsername - should throw if user not found")
-    void shouldThrow_WhenUserNotFound() {
-        when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
+    void getUserByUsername_ShouldThrowNotFoundException_WhenUserNotFound() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> userService.getUserByUsername("ghost"));
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> userService.getUserByUsername("john.doe")
+        );
+
+        assertEquals("User not found: john.doe", exception.getMessage());
     }
 
+
     @Test
-    @DisplayName("updatePassword - should update if old password correct")
-    void shouldUpdatePassword_WhenOldPasswordMatches() {
-        UpdatePasswordRequest request = new UpdatePasswordRequest("old", "new");
-        User user = User.builder().username("Cihan.Dilsiz").password("old").userActive(true).build();
-        UserDto dto = UserDto.builder().username("Cihan.Dilsiz").build();
+    void getAllUsers_ShouldReturnUserDtoList_WhenUsersExist() {
+        List<User> users = List.of(testUser);
+        List<UserDto> userDtos = List.of(testUserDto);
 
-        when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(userMapper.toUserDto(any(User.class))).thenReturn(dto);
+        when(userRepository.findAll()).thenReturn(users);
+        when(userMapper.toUserDtoList(users)).thenReturn(userDtos);
 
-        UserDto result = userService.updatePassword("Cihan.Dilsiz", request);
+        List<UserDto> result = userService.getAllUsers();
 
         assertNotNull(result);
-        assertEquals("Cihan.Dilsiz", result.getUsername());
-        assertEquals("new", user.getPassword());
+        assertEquals(1, result.size());
+        assertEquals("john.doe", result.get(0).getUsername());
+    }
+
+
+    @Test
+    void deleteUser_ShouldDeleteUser_WhenUserExists() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.of(testUser));
+
+        userService.deleteUser("john.doe");
+
+        verify(userRepository).delete(testUser);
     }
 
     @Test
-    @DisplayName("updatePassword - should throw when old password is wrong")
-    void shouldThrow_WhenOldPasswordWrong() {
-        UpdatePasswordRequest request = new UpdatePasswordRequest("wrong", "new");
-        User user = User.builder().username("Cihan.Dilsiz").password("old").build();
+    void deleteUser_ShouldThrowNotFoundException_WhenUserNotFound() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-        when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> userService.deleteUser("john.doe")
+        );
 
-        assertThrows(InvalidCredentialsException.class, () -> userService.updatePassword("Cihan.Dilsiz", request));
+        assertEquals("User not found: john.doe", exception.getMessage());
+        verify(userRepository, never()).delete(any());
+    }
+
+
+    @Test
+    void activateOrDeactivate_ShouldToggleUserStatus_WhenUserExists() {
+        testUser.setUserActive(false);
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        userService.activateOrDeactivate("john.doe");
+
+        assertTrue(testUser.isUserActive());
+        verify(userRepository).save(testUser);
     }
 
     @Test
-    @DisplayName("updatePassword - should throw if user not found")
-    void shouldThrow_WhenUserNotFoundForPasswordUpdate() {
-        UpdatePasswordRequest request = new UpdatePasswordRequest("old", "new");
+    void activateOrDeactivate_ShouldThrowNotFoundException_WhenUserNotFound() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-        when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> userService.activateOrDeactivate("john.doe")
+        );
 
-        assertThrows(NotFoundException.class, () -> userService.updatePassword("ghost", request));
+        assertEquals("User not found: john.doe", exception.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+
+    @Test
+    void getUserEntityByUsername_ShouldReturnUser_WhenUserExists() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.of(testUser));
+
+        User result = userService.getUserEntityByUsername("john.doe");
+
+        assertNotNull(result);
+        assertEquals("john.doe", result.getUsername());
+        assertEquals("John", result.getFirstName());
     }
 
     @Test
-    @DisplayName("deleteUser - should delete when user exists")
-    void shouldDeleteUser_WhenExists() {
-        User user = User.builder().username("Cihan.Dilsiz").build();
+    void getUserEntityByUsername_ShouldThrowNotFoundException_WhenUserNotFound() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-        when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
-        doNothing().when(userRepository).delete(user);
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> userService.getUserEntityByUsername("john.doe")
+        );
 
-        userService.deleteUser("Cihan.Dilsiz");
-
-        verify(userRepository).delete(user);
+        assertEquals("User not found: john.doe", exception.getMessage());
     }
 
-    @Test
-    @DisplayName("deleteUser - should throw when user not found")
-    void shouldThrow_WhenDeletingUnknownUser() {
-        when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> userService.deleteUser("ghost"));
-    }
 
-    @Test
-    @DisplayName("activateOrDeactivate - should toggle active flag")
-    void shouldToggleActivation() {
-        User user = User.builder().username("Cihan.Dilsiz").userActive(true).build();
 
-        when(userRepository.findByUsername("Cihan.Dilsiz")).thenReturn(Optional.of(user));
-
-        userService.activateOrDeactivate("Cihan.Dilsiz");
-
-        assertFalse(user.isUserActive());
-        verify(userRepository).save(user);
-    }
-
-    @Test
-    @DisplayName("activateOrDeactivate - should throw when user not found")
-    void shouldThrow_WhenTogglingUnknownUser() {
-        when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
-
-        assertThrows(NotFoundException.class, () -> userService.activateOrDeactivate("ghost"));
-    }
 }

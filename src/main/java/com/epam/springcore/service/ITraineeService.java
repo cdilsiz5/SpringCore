@@ -1,11 +1,13 @@
 package com.epam.springcore.service;
 
 import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.model.Trainee;
-import com.epam.springcore.model.User;
 import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
+import com.epam.springcore.request.trainer.TrainerUsernameRequest;
+import com.epam.springcore.response.LoginCredentialsResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,61 +23,50 @@ public interface ITraineeService {
      * @param request the trainee creation request
      * @return the created trainee DTO
      */
-    TraineeDto createTrainee(CreateTraineeRequest request);
+    LoginCredentialsResponse createTrainee(CreateTraineeRequest request);
 
     /**
      * Retrieves a specific trainee by their username.
      *
-     * @param authUsername authenticated username
-     * @param authPassword authenticated password
+
      * @param username      the username of the trainee to retrieve
      * @return the trainee DTO
      */
-    TraineeDto getTraineeByUsername(String authUsername, String authPassword, String username);
+    TraineeDto getTraineeByUsername( String username);
 
     /**
      * Retrieves all trainees in the system.
      *
-     * @param authUsername authenticated username
-     * @param authPassword authenticated password
      * @return a list of all trainee DTOs
      */
-    List<TraineeDto> getAllTrainees(String authUsername, String authPassword);
+    List<TraineeDto> getAllTrainees();
 
     /**
      * Updates the information of an existing trainee.
      *
-     * @param authUsername authenticated username
-     * @param authPassword authenticated password
      * @param username      the username of the trainee to update
      * @param request       the update request payload
      * @return the updated trainee DTO
      */
-    TraineeDto updateTrainee(String authUsername, String authPassword, String username, UpdateTraineeRequest request);
+    TraineeDto updateTrainee( String username, UpdateTraineeRequest request);
 
     /**
      * Deletes a trainee by their username.
      *
-     * @param authUsername authenticated username
-     * @param authPassword authenticated password
      * @param username      the username of the trainee to delete
      */
-    void deleteTrainee(String authUsername, String authPassword, String username);
+    void deleteTrainee( String username);
 
     /**
      * Toggles activation status of a trainee's user account.
      *
-     * @param authUsername authenticated username
-     * @param authPassword authenticated password
      * @param username      the username of the trainee to toggle activation for
      */
-    void toggleActivation(String authUsername, String authPassword, String username);
+    void toggleActivation( String username);
 
     /**
      * Retrieves the training history for a trainee with optional filters.
      *
-     * @param authUsername     authenticated username
-     * @param authPassword     authenticated password
      * @param username         the trainee's username
      * @param from             optional start date
      * @param to               optional end date
@@ -83,17 +74,9 @@ public interface ITraineeService {
      * @param trainerLastName  optional trainer last name filter
      * @return list of training DTOs matching the filter
      */
-    List<TrainingDto> getTrainingHistory(String authUsername, String authPassword, String username,
+    List<TrainingDto> getTrainingHistory( String username,
                                          LocalDate from, LocalDate to,
                                          String trainerName, String trainerLastName);
-
-    /**
-     * Creates a new Trainee entity from an existing User entity.
-     *
-     * @param user the user entity to associate with the new trainee
-     * @return the created trainee DTO
-     */
-    TraineeDto createTraineeEntity(User user);
 
     /**
      * Fetches the trainee entity by its ID.
@@ -102,4 +85,21 @@ public interface ITraineeService {
      * @return the Trainee entity
      */
     Trainee getTraineeById(Long traineeId);
+
+    /**
+     * Retrieves a list of trainers that are not yet assigned to a given trainee.
+     * @param authUsername authenticated username of the trainee
+     * @return list of unassigned trainers
+     */
+    List<TrainerDto> getUnassignedTrainers(String authUsername);
+
+    /**
+     * Updates the list of trainers assigned to a given trainee.
+     *
+     * @param username the trainee's username
+     * @param requestList list of trainer usernames to be assigned
+     * @return list of assigned trainers as DTOs
+     */
+    List<TrainerDto> updateTrainerList(String username, List<TrainerUsernameRequest> requestList);
+
 }

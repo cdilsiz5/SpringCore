@@ -16,10 +16,10 @@ public class UpdateTrainingRequest {
 
 
     @NotBlank(message = "Trainee ID cannot be blank")
-    private String traineeId;
+    private Long traineeId;
 
     @NotBlank(message = "Trainer ID cannot be blank")
-    private String trainerId;
+    private Long trainerId;
 
     @NotBlank(message = "Training date cannot be blank")
     private String date;

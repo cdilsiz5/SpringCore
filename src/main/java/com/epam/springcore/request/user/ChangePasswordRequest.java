@@ -10,12 +10,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UpdatePasswordRequest {
+public class ChangePasswordRequest {
 
-    @NotBlank(message = "Old password must not be blank")
+    @NotBlank
+    private String username;
+
+    @NotBlank
     private String oldPassword;
 
-    @NotBlank(message = "New password must not be blank")
+    @NotBlank
     private String newPassword;
-
 }

@@ -1,26 +1,32 @@
 package com.epam.springcore.controller;
 
 import com.epam.springcore.dto.TraineeDto;
+import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
-import com.epam.springcore.dto.UserDto;
 import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
+import com.epam.springcore.filter.TransactionIdFilter;
+import com.epam.springcore.request.trainee.CreateTraineeRequest;
 import com.epam.springcore.request.trainee.UpdateTraineeRequest;
+import com.epam.springcore.request.trainer.TrainerUsernameRequest;
+import com.epam.springcore.response.LoginCredentialsResponse;
 import com.epam.springcore.service.ITraineeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.*;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -29,132 +35,191 @@ class TraineeControllerTest {
 
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
-    private TraineeDto mockTrainee;
-    private UserDto mockUser;
 
     @Mock
     private ITraineeService traineeService;
 
     private static final String BASE_URL = "/api/epam/v1/trainees";
-    private static final String AUTH_USERNAME = "admin";
-    private static final String AUTH_PASSWORD = "pass";
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         TraineeController controller = new TraineeController(traineeService);
+
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .addFilters(new TransactionIdFilter())
                 .build();
 
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-        mockUser = UserDto.builder()
-                .username("Cihan.Dilsiz")
-                .firstName("Cihan")
-                .lastName("Dilsiz")
-                .userActive(true)
-                .build();
-
-        mockTrainee = TraineeDto.builder()
-                .address("İstanbul")
-                .dateOfBirth(LocalDate.of(1999, 1, 1))
-                .user(mockUser)
-                .build();
     }
 
-    @Test
-    void testGetTraineeByUsername_success() throws Exception {
-        when(traineeService.getTraineeByUsername(AUTH_USERNAME, AUTH_PASSWORD, "Cihan.Dilsiz"))
-                .thenReturn(mockTrainee);
-
-        mockMvc.perform(get(BASE_URL + "/Cihan.Dilsiz")
-                        .header("authUsername", AUTH_USERNAME)
-                        .header("authPassword", AUTH_PASSWORD))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.user.username").value("Cihan.Dilsiz"))
-                .andExpect(jsonPath("$.address").value("İstanbul"));
-    }
 
     @Test
-    void testGetTraineeByUsername_notFound() throws Exception {
-        when(traineeService.getTraineeByUsername(AUTH_USERNAME, AUTH_PASSWORD, "notfound"))
-                .thenThrow(new NotFoundException("Trainee not found"));
+    @DisplayName("Should create trainee and return login credentials")
+    void testCreateTrainee_success() throws Exception {
+        CreateTraineeRequest request = new CreateTraineeRequest("Ali", "Veli", LocalDate.of(1990, 1, 1), "İstanbul");
+        LoginCredentialsResponse response = new LoginCredentialsResponse("ali.veli", "123456");
 
-        mockMvc.perform(get(BASE_URL + "/notfound")
-                        .header("authUsername", AUTH_USERNAME)
-                        .header("authPassword", AUTH_PASSWORD))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Trainee not found"));
-    }
+        when(traineeService.createTrainee(any())).thenReturn(response);
 
-    @Test
-    void testGetAllTrainees_success() throws Exception {
-        when(traineeService.getAllTrainees(AUTH_USERNAME, AUTH_PASSWORD)).thenReturn(List.of(mockTrainee));
-
-        mockMvc.perform(get(BASE_URL)
-                        .header("authUsername", AUTH_USERNAME)
-                        .header("authPassword", AUTH_PASSWORD))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1));
-    }
-
-    @Test
-    void testUpdateTrainee_success() throws Exception {
-        UpdateTraineeRequest request = new UpdateTraineeRequest(LocalDate.of(1998, 5, 5), "Ankara");
-        mockTrainee.setAddress("Ankara");
-
-        when(traineeService.updateTrainee(eq(AUTH_USERNAME), eq(AUTH_PASSWORD), eq("Cihan.Dilsiz"), any(UpdateTraineeRequest.class)))
-                .thenReturn(mockTrainee);
-
-        mockMvc.perform(put(BASE_URL + "/Cihan.Dilsiz")
-                        .header("authUsername", AUTH_USERNAME)
-                        .header("authPassword", AUTH_PASSWORD)
+        mockMvc.perform(post(BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.address").value("Ankara"));
+                .andExpect(jsonPath("$.username").value("ali.veli"));
     }
 
     @Test
+    @DisplayName("Should return bad request if trainee data is invalid")
+    void testCreateTrainee_validationError() throws Exception {
+        CreateTraineeRequest request = new CreateTraineeRequest("", "", null, "");
+
+        mockMvc.perform(post(BASE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Should return trainee when username exists")
+    void testGetTraineeByUsername_success() throws Exception {
+        when(traineeService.getTraineeByUsername("ali.veli")).thenReturn(new TraineeDto());
+
+        mockMvc.perform(get(BASE_URL + "/ali.veli"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Should return 404 if trainee not found by username")
+    void testGetTraineeByUsername_notFound() throws Exception {
+        when(traineeService.getTraineeByUsername("unknown"))
+                .thenThrow(new NotFoundException("Trainee not found"));
+
+        mockMvc.perform(get(BASE_URL + "/unknown"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should return all trainees")
+    void testGetAllTrainees_success() throws Exception {
+        when(traineeService.getAllTrainees()).thenReturn(List.of(new TraineeDto()));
+
+        mockMvc.perform(get(BASE_URL))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Should update trainee information successfully")
+    void testUpdateTrainee_success() throws Exception {
+        UpdateTraineeRequest request = new UpdateTraineeRequest(LocalDate.of(1991, 1, 1), "Ankara");
+        when(traineeService.updateTrainee(eq("ali.veli"), any())).thenReturn(new TraineeDto());
+
+        mockMvc.perform(put(BASE_URL + "/ali.veli")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Should return 404 if trying to update unknown trainee")
+    void testUpdateTrainee_notFound() throws Exception {
+        UpdateTraineeRequest request = new UpdateTraineeRequest(LocalDate.of(1991, 1, 1), "Ankara");
+        when(traineeService.updateTrainee(eq("unknown"), any()))
+                .thenThrow(new NotFoundException("Trainee not found"));
+
+        mockMvc.perform(put(BASE_URL + "/unknown")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should delete trainee successfully")
     void testDeleteTrainee_success() throws Exception {
-        doNothing().when(traineeService).deleteTrainee(AUTH_USERNAME, AUTH_PASSWORD, "Cihan.Dilsiz");
+        doNothing().when(traineeService).deleteTrainee("ali.veli");
 
-        mockMvc.perform(delete(BASE_URL + "/Cihan.Dilsiz")
-                        .header("authUsername", AUTH_USERNAME)
-                        .header("authPassword", AUTH_PASSWORD))
+        mockMvc.perform(delete(BASE_URL + "/ali.veli"))
                 .andExpect(status().isOk());
     }
 
     @Test
+    @DisplayName("Should return unauthorized when delete is not allowed")
+    void testDeleteTrainee_unauthorized() throws Exception {
+        doThrow(new UnauthorizedException("Unauthorized")).when(traineeService).deleteTrainee("ali.veli");
+
+        mockMvc.perform(delete(BASE_URL + "/ali.veli"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Should toggle trainee activation status")
     void testToggleTraineeActivation_success() throws Exception {
-        doNothing().when(traineeService).toggleActivation(AUTH_USERNAME, AUTH_PASSWORD, "Cihan.Dilsiz");
+        doNothing().when(traineeService).toggleActivation("ali.veli");
 
-        mockMvc.perform(patch(BASE_URL + "/Cihan.Dilsiz/toggle-activation")
-                        .header("authUsername", AUTH_USERNAME)
-                        .header("authPassword", AUTH_PASSWORD))
+        mockMvc.perform(patch(BASE_URL + "/ali.veli/toggle-activation"))
                 .andExpect(status().isOk());
     }
 
     @Test
+    @DisplayName("Should return 404 when toggling activation for unknown trainee")
+    void testToggleTraineeActivation_notFound() throws Exception {
+        doThrow(new NotFoundException("Trainee not found"))
+                .when(traineeService).toggleActivation("unknown");
+
+        mockMvc.perform(patch(BASE_URL + "/unknown/toggle-activation"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should return trainee training history")
     void testGetTrainingHistory_success() throws Exception {
-        TrainingDto training = TrainingDto.builder()
-                .id(1L)
-                .trainee(mockTrainee)
-                .build();
+        when(traineeService.getTrainingHistory(any(), any(), any(), any(), any()))
+                .thenReturn(List.of(new TrainingDto()));
 
-        when(traineeService.getTrainingHistory(eq(AUTH_USERNAME), eq(AUTH_PASSWORD), eq("Cihan.Dilsiz"), any(), any(), any(), any()))
-                .thenReturn(List.of(training));
+        mockMvc.perform(get(BASE_URL + "/ali.veli/training-history")
+                        .param("from", "2025-01-01")
+                        .param("to", "2025-12-31"))
+                .andExpect(status().isOk());
+    }
 
-        mockMvc.perform(get(BASE_URL + "/Cihan.Dilsiz/training-history")
-                        .header("authUsername", AUTH_USERNAME)
-                        .header("authPassword", AUTH_PASSWORD)
-                        .param("from", "2025-07-21")
-                        .param("to", "2025-12-31")
-                        .param("trainerName", "Ali"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1));
+    @Test
+    @DisplayName("Should return list of trainers not assigned to the trainee")
+    void testGetUnassignedTrainers_success() throws Exception {
+        when(traineeService.getUnassignedTrainers("ali.veli"))
+                .thenReturn(List.of(new TrainerDto()));
+
+        mockMvc.perform(get(BASE_URL + "/ali.veli/unassigned-trainers"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Should update trainer list for the trainee")
+    void testUpdateTrainerList_success() throws Exception {
+        TrainerUsernameRequest req = new TrainerUsernameRequest("trainer1");
+
+        when(traineeService.updateTrainerList(eq("ali.veli"), any()))
+                .thenReturn(List.of(new TrainerDto()));
+
+        mockMvc.perform(put(BASE_URL + "/ali.veli/update-trainer-list")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(List.of(req))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Should return 404 if trainer not found during trainer list update")
+    void testUpdateTrainerList_notFound() throws Exception {
+        TrainerUsernameRequest req = new TrainerUsernameRequest("unknown");
+
+        when(traineeService.updateTrainerList(eq("ali.veli"), any()))
+                .thenThrow(new NotFoundException("Trainer not found"));
+
+        mockMvc.perform(put(BASE_URL + "/ali.veli/update-trainer-list")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(List.of(req))))
+                .andExpect(status().isNotFound());
     }
 }

@@ -23,13 +23,13 @@ import java.time.LocalDate;
     private LocalDate date;
     private Integer durationMinutes;
 
-   @ManyToOne
-   @JoinColumn(name = "trainer_id")
-   private Trainer trainer;
+    @ManyToOne
+    @JoinColumn(name = "trainer_id")
+    private Trainer trainer;
 
-   @ManyToOne
-   @JoinColumn(name = "trainee_id")
-   private Trainee trainee;
+    @ManyToOne
+    @JoinColumn(name = "trainee_id")
+    private Trainee trainee;
 
    @ManyToOne
    @JoinColumn(name = "training_type_id")
