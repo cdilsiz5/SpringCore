@@ -26,12 +26,12 @@
     </servlet-mapping>
 
     <filter>
-        <filter-name>activeUserFilter</filter-name>
-        <filter-class>com.epam.springcore.config.ActiveUserFilter</filter-class>
+        <filter-name>transactionIdFilter</filter-name>
+        <filter-class>com.epam.springcore.filter.TransactionIdFilter</filter-class>
     </filter>
 
     <filter-mapping>
-        <filter-name>activeUserFilter</filter-name>
+        <filter-name>transactionIdFilter</filter-name>
         <url-pattern>/api/epam/v1/*</url-pattern>
     </filter-mapping>
 

@@ -4,6 +4,7 @@ import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.dto.TrainingTypeDto;
 import com.epam.springcore.request.training.CreateTrainingRequest;
 import com.epam.springcore.request.training.UpdateTrainingRequest;
+import com.epam.springcore.service.ITrainingService;
 import com.epam.springcore.service.impl.TrainingServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,7 +26,7 @@ import java.util.List;
 @Tag(name = "Training Resource", description = "SpringCore REST APIs for Trainings")
 public class TrainingController {
 
-    private final TrainingServiceImpl trainingService;
+    private final ITrainingService trainingService;
 
     @Operation(summary = "Create Training", description = "Create a new Training")
     @ApiResponses(

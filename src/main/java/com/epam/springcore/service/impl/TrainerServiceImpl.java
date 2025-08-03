@@ -5,18 +5,25 @@ import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.exception.NotFoundException;
 import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.mapper.TrainerMapper;
+import com.epam.springcore.mapper.TrainingMapper;
 import com.epam.springcore.model.Trainer;
+import com.epam.springcore.model.Training;
 import com.epam.springcore.model.User;
 import com.epam.springcore.model.enums.Specialization;
 import com.epam.springcore.repository.TrainerRepository;
+import com.epam.springcore.repository.TrainingRepository;
 import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 import com.epam.springcore.request.user.CreateUserRequest;
 import com.epam.springcore.response.LoginCredentialsResponse;
 import com.epam.springcore.service.ITrainerService;
 import com.epam.springcore.service.ITrainingService;
+import com.epam.springcore.service.IUserService;
+import com.epam.springcore.util.LogUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jboss.logging.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -28,14 +35,36 @@ import java.util.stream.Collectors;
 @Service
 public class TrainerServiceImpl implements ITrainerService {
 
-    private final TrainerRepository trainerRepository;
-    private final ITrainingService trainingService;
-    private final TrainerMapper trainerMapper;
-    private final UserServiceImpl userService;
+    private TrainerRepository trainerRepository;
+    private ITrainingService trainingService;
+    private TrainerMapper trainerMapper;
+    private IUserService userService;
+
+    @Autowired
+    public void setTrainerRepository(TrainerRepository trainerRepository) {
+        this.trainerRepository = trainerRepository;
+    }
+
+    @Autowired
+    public void setTrainingService(ITrainingService trainingService) {
+        this.trainingService = trainingService;
+    }
+
+    @Autowired
+    public void setTrainerMapper(TrainerMapper trainerMapper) {
+        this.trainerMapper = trainerMapper;
+    }
+
+    @Autowired
+    public void setUserService(IUserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     public LoginCredentialsResponse createTrainer(CreateTrainerRequest request) {
-        log.info("Creating trainer via public endpoint");
+        String txId = LogUtil.getTransactionId();
+        log.info("[{}] SERVICE Layer - Creating trainer via public endpoint", txId);
+
         CreateUserRequest createUserRequest = CreateUserRequest.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -43,12 +72,12 @@ public class TrainerServiceImpl implements ITrainerService {
         User savedUser = userService.createUserEntity(createUserRequest);
         createTrainerEntity(savedUser, request.getSpecialty());
         return new LoginCredentialsResponse(savedUser.getUsername(), savedUser.getPassword());
-     }
+    }
 
     @Override
     public TrainerDto getTrainerByUsername(String username) {
         validate(username);
-        log.info("Fetching Trainer by username: {}", username);
+        log.info("[{}] SERVICE Layer - Fetching Trainer by username: {}", MDC.get("transactionId"), username);
         TrainerDto dto = trainerMapper.toTrainerDto(getTrainerEntityByUsername(username));
         userService.logout(username);
         return dto;
@@ -56,22 +85,20 @@ public class TrainerServiceImpl implements ITrainerService {
 
     @Override
     public List<TrainerDto> getAllTrainers() {
-        String username = "__system__";
-        validate(username);
-        log.info("Fetching all trainers");
-        List<TrainerDto> dtoList = trainerMapper.toTrainerDtoList(trainerRepository.findAll());
-        userService.logout(username);
-        return dtoList;
+        log.info("[{}] SERVICE Layer - Fetching all trainers", MDC.get("transactionId"));
+        return trainerMapper.toTrainerDtoList(trainerRepository.findAll());
     }
 
     @Override
     public TrainerDto updateTrainer(String username, UpdateTrainerRequest request) {
         validate(username);
-        log.info("Updating Trainer with username: {}", username);
+        log.info("[{}] SERVICE Layer - Updating Trainer with username: {}", MDC.get("transactionId"), username);
+
         Trainer trainer = getTrainerEntityByUsername(username);
         trainerMapper.updateTrainerRequest(request, trainer);
         Trainer updatedTrainer = trainerRepository.save(trainer);
-        log.info("Trainer updated. ID: {}", updatedTrainer.getId());
+
+        log.info("[{}] SERVICE Layer - Trainer updated. ID: {}", MDC.get("transactionId"), updatedTrainer.getId());
         userService.logout(username);
         return trainerMapper.toTrainerDto(updatedTrainer);
     }
@@ -79,17 +106,19 @@ public class TrainerServiceImpl implements ITrainerService {
     @Override
     public void deleteTrainer(String username) {
         validate(username);
-        log.info("Deleting Trainer with username: {}", username);
+        log.info("[{}] SERVICE Layer - Deleting Trainer with username: {}", MDC.get("transactionId"), username);
+
         Trainer trainer = getTrainerEntityByUsername(username);
         trainerRepository.delete(trainer);
-        log.info("Trainer deleted. ID: {}", trainer.getId());
+
+        log.info("[{}] SERVICE Layer - Trainer deleted. ID: {}", MDC.get("transactionId"), trainer.getId());
         userService.logout(username);
     }
 
     @Override
     public void toggleActivation(String username) {
         validate(username);
-        log.info("Toggling activation for user: {}", username);
+        log.info("[{}] SERVICE Layer - Toggling activation for user: {}", MDC.get("transactionId"), username);
         userService.activateOrDeactivate(username);
         userService.logout(username);
     }
@@ -97,7 +126,8 @@ public class TrainerServiceImpl implements ITrainerService {
     @Override
     public List<TrainingDto> getTrainingHistory(String username, LocalDate from, LocalDate to, String traineeName, String traineeLastName) {
         validate(username);
-        log.info("Fetching training history for trainer: {}", username);
+        log.info("[{}] SERVICE Layer - Fetching training history for trainer: {}", MDC.get("transactionId"), username);
+
         Trainer trainer = getTrainerEntityByUsername(username);
 
         List<TrainingDto> result = trainingService.findAllByTrainer(trainer).stream()
@@ -112,29 +142,27 @@ public class TrainerServiceImpl implements ITrainerService {
                     return firstMatch && lastMatch;
                 })
                 .collect(Collectors.toList());
-
         userService.logout(username);
         return result;
     }
 
-
     private TrainerDto createTrainerEntity(User user, Specialization specialty) {
-        log.info("Creating Trainer entity for user ID: {}, specialization: {}", user.getId(), specialty);
+        log.info("[{}] SERVICE Layer - Creating Trainer entity for user ID: {}, specialization: {}", MDC.get("transactionId"), user.getId(), specialty);
         Trainer trainer = Trainer.builder()
                 .specialization(specialty)
                 .user(user)
                 .build();
         Trainer savedTrainer = trainerRepository.save(trainer);
-        log.info("Trainer saved with ID: {}", savedTrainer.getId());
+        log.info("[{}] SERVICE Layer - Trainer saved with ID: {}", MDC.get("transactionId"), savedTrainer.getId());
         return trainerMapper.toTrainerDto(savedTrainer);
     }
 
     @Override
     public Trainer getTrainerById(Long trainerId) {
-        log.info("Fetching trainer by ID: {}", trainerId);
+        log.info("[{}] SERVICE Layer - Fetching trainer by ID: {}", MDC.get("transactionId"), trainerId);
         return trainerRepository.findById(trainerId)
                 .orElseThrow(() -> {
-                    log.warn("Trainer not found with ID: {}", trainerId);
+                    log.warn("[{}] SERVICE Layer - Trainer not found with ID: {}", MDC.get("transactionId"), trainerId);
                     return new NotFoundException("Trainer with id " + trainerId + " not found");
                 });
     }
@@ -142,13 +170,14 @@ public class TrainerServiceImpl implements ITrainerService {
     private Trainer getTrainerEntityByUsername(String username) {
         return trainerRepository.findByUserUsername(username)
                 .orElseThrow(() -> {
-                    log.warn("Trainer not found with username: {}", username);
+                    log.warn("[{}] SERVICE Layer - Trainer not found with username: {}", MDC.get("transactionId"), username);
                     return new NotFoundException("Trainer not found: " + username);
                 });
     }
 
     private void validate(String username) {
         if (!userService.isAuthenticated(username)) {
+            log.warn("[{}] SERVICE Layer - Unauthorized access attempt for: {}", MDC.get("transactionId"), username);
             throw new UnauthorizedException("User not authenticated: " + username);
         }
     }

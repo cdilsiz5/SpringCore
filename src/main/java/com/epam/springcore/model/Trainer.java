@@ -27,10 +27,10 @@ public class Trainer {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToMany(mappedBy = "trainers",fetch = FetchType.EAGER)
+    @ManyToMany(mappedBy = "trainers", fetch = FetchType.LAZY)
     private List<Trainee> trainees;
 
-    @OneToMany(mappedBy = "trainer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "trainer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Training> trainings;
 
 }

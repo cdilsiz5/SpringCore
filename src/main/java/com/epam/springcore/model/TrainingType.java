@@ -22,6 +22,6 @@ public class TrainingType {
     @Column(unique = true, nullable = false)
     private Specialization name;
 
-    @OneToMany(mappedBy = "trainingType")
+    @OneToMany(mappedBy = "trainingType", fetch = FetchType.LAZY)
     private List<Training> trainings;
 }

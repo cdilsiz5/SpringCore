@@ -1,45 +1,43 @@
+
 package com.epam.springcore.controller;
 
 import com.epam.springcore.dto.TrainerDto;
 import com.epam.springcore.dto.TrainingDto;
-import com.epam.springcore.dto.UserDto;
 import com.epam.springcore.exception.NotFoundException;
+import com.epam.springcore.exception.UnauthorizedException;
 import com.epam.springcore.exception.handler.GlobalExceptionHandler;
 import com.epam.springcore.model.enums.Specialization;
+import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
+import com.epam.springcore.response.LoginCredentialsResponse;
 import com.epam.springcore.service.ITrainerService;
 import com.epam.springcore.service.impl.TrainerServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.*;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-public class TrainerControllerTest {
+class TrainerControllerTest {
 
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
     @Mock
-    private TrainerServiceImpl trainerService;
-
-    private TrainerDto mockTrainer;
-    private UserDto mockUser;
+    private ITrainerService trainerService;
 
     private static final String BASE_URL = "/api/epam/v1/trainers";
-    private static final String AUTH_USERNAME = "admin";
-    private static final String AUTH_PASSWORD = "pass";
 
     @BeforeEach
     void setUp() {
@@ -49,112 +47,138 @@ public class TrainerControllerTest {
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
 
-        objectMapper = new ObjectMapper()
-                .registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-        mockUser = UserDto.builder()
-                .id(1L)
-                .username("Cihan.Dilsiz")
-                .firstName("Cihan")
-                .lastName("Dilsiz")
-                .userActive(true)
-                .build();
-
-        mockTrainer = TrainerDto.builder()
-                .specialization("YOGA")
-                .user(mockUser)
-                .build();
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
+
     @Test
-    @DisplayName("GET /trainers/{username} - Success")
     void testGetTrainerByUsername_success() throws Exception {
-        when(trainerService.getTrainerByUsername(AUTH_USERNAME, AUTH_PASSWORD, "Cihan.Dilsiz"))
-                .thenReturn(mockTrainer);
+        when(trainerService.getTrainerByUsername("john.doe")).thenReturn(new TrainerDto());
 
-        mockMvc.perform(get(BASE_URL + "/Cihan.Dilsiz")
-                        .header("X-Username", AUTH_USERNAME)
-                        .header("X-Password", AUTH_PASSWORD))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.user.username").value("Cihan.Dilsiz"));
-    }
-
-    @Test
-    @DisplayName("GET /trainers - Success")
-    void testGetAllTrainers_success() throws Exception {
-        when(trainerService.getAllTrainers(AUTH_USERNAME, AUTH_PASSWORD))
-                .thenReturn(List.of(mockTrainer));
-
-        mockMvc.perform(get(BASE_URL)
-                        .header("X-Username", AUTH_USERNAME)
-                        .header("X-Password", AUTH_PASSWORD))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1));
-    }
-
-    @Test
-    @DisplayName("PUT /trainers/{username} - Success")
-    void testUpdateTrainer_success() throws Exception {
-        UpdateTrainerRequest request = new UpdateTrainerRequest();
-        request.setSpecialization(Specialization.CARDIO);
-        mockTrainer.setSpecialization("CARDIO");
-
-        when(trainerService.updateTrainer(AUTH_USERNAME, AUTH_PASSWORD, "Cihan.Dilsiz", request))
-                .thenReturn(mockTrainer);
-
-        mockMvc.perform(put(BASE_URL + "/Cihan.Dilsiz")
-                        .header("X-Username", AUTH_USERNAME)
-                        .header("X-Password", AUTH_PASSWORD)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.specialization").value("CARDIO"));
-    }
-
-    @Test
-    @DisplayName("DELETE /trainers/{username} - Success")
-    void testDeleteTrainer_success() throws Exception {
-        doNothing().when(trainerService).deleteTrainer(AUTH_USERNAME, AUTH_PASSWORD, "Cihan.Dilsiz");
-
-        mockMvc.perform(delete(BASE_URL + "/Cihan.Dilsiz")
-                        .header("X-Username", AUTH_USERNAME)
-                        .header("X-Password", AUTH_PASSWORD))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    @DisplayName("PATCH /trainers/{username}/toggle-activation - Success")
-    void testToggleActivation_success() throws Exception {
-        doNothing().when(trainerService).toggleActivation(AUTH_USERNAME, AUTH_PASSWORD, "Cihan.Dilsiz");
-
-        mockMvc.perform(patch(BASE_URL + "/Cihan.Dilsiz/toggle-activation")
-                        .header("X-Username", AUTH_USERNAME)
-                        .header("X-Password", AUTH_PASSWORD))
+        mockMvc.perform(get(BASE_URL + "/john.doe"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("GET /trainers/{username}/trainings - Success")
+    void testGetTrainerByUsername_notFound() throws Exception {
+        when(trainerService.getTrainerByUsername("unknown"))
+                .thenThrow(new NotFoundException("Trainer not found"));
+
+        mockMvc.perform(get(BASE_URL + "/unknown"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testGetAllTrainers_success() throws Exception {
+        when(trainerService.getAllTrainers()).thenReturn(List.of(new TrainerDto()));
+
+        mockMvc.perform(get(BASE_URL))
+                .andExpect(status().isOk());
+    }
+
+
+    @Test
+    void testDeleteTrainer_success() throws Exception {
+        doNothing().when(trainerService).deleteTrainer("john.doe");
+
+        mockMvc.perform(delete(BASE_URL + "/john.doe"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testDeleteTrainer_unauthorized() throws Exception {
+        doThrow(new UnauthorizedException("Unauthorized")).when(trainerService).deleteTrainer("john.doe");
+
+        mockMvc.perform(delete(BASE_URL + "/john.doe"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testToggleActivation_success() throws Exception {
+        doNothing().when(trainerService).toggleActivation("john.doe");
+
+        mockMvc.perform(patch(BASE_URL + "/john.doe/toggle-activation"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void testGetTrainingHistory_success() throws Exception {
-        TrainingDto training = TrainingDto.builder()
-                .id(1L)
-                .trainer(mockTrainer)
-                .build();
+        when(trainerService.getTrainingHistory(any(), any(), any(), any(), any()))
+                .thenReturn(List.of(new TrainingDto()));
 
-        when(trainerService.getTrainingHistory(
-                eq(AUTH_USERNAME), eq(AUTH_PASSWORD), eq("Cihan.Dilsiz"),
-                any(), any(), any(), any()
-        )).thenReturn(List.of(training));
+        mockMvc.perform(get(BASE_URL + "/john.doe/trainings")
+                        .param("from", "2025-01-01")
+                        .param("to", "2025-12-31"))
+                .andExpect(status().isOk());
+    }
 
-        mockMvc.perform(get(BASE_URL + "/Cihan.Dilsiz/trainings")
-                        .header("X-Username", AUTH_USERNAME)
-                        .header("X-Password", AUTH_PASSWORD)
-                        .param("from", "2025-07-21")
-                        .param("to", "2025-12-31")
-                        .param("traineeName", "Ali")
-                        .param("traineeLastName", "Yılmaz"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1));
+    @Test
+    void testCreateTrainer_validationError() throws Exception {
+        CreateTrainerRequest request = new CreateTrainerRequest("", "", null);
+
+        mockMvc.perform(post(BASE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testGetTrainerByUsername_unauthorized() throws Exception {
+        when(trainerService.getTrainerByUsername("unauth"))
+                .thenThrow(new UnauthorizedException("Unauthorized"));
+
+        mockMvc.perform(get(BASE_URL + "/unauth"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testUpdateTrainer_validationError() throws Exception {
+        UpdateTrainerRequest request = new UpdateTrainerRequest(null);
+
+        mockMvc.perform(put(BASE_URL + "/ali.yilmaz")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testUpdateTrainer_notFound() throws Exception {
+        UpdateTrainerRequest request = new UpdateTrainerRequest(Specialization.BOXING);
+        when(trainerService.updateTrainer(eq("unknown"), any()))
+                .thenThrow(new NotFoundException("Trainer not found"));
+
+        mockMvc.perform(put(BASE_URL + "/unknown")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testDeleteTrainer_notFound() throws Exception {
+        doThrow(new NotFoundException("Trainer not found"))
+                .when(trainerService).deleteTrainer("unknown");
+
+        mockMvc.perform(delete(BASE_URL + "/unknown"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testToggleTrainerActivation_notFound() throws Exception {
+        doThrow(new NotFoundException("Trainer not found"))
+                .when(trainerService).toggleActivation("unknown");
+
+        mockMvc.perform(patch(BASE_URL + "/unknown/toggle-activation"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testGetTrainingHistory_unauthorized() throws Exception {
+        when(trainerService.getTrainingHistory(eq("unauth"), any(), any(), any(), any()))
+                .thenThrow(new UnauthorizedException("Unauthorized"));
+
+        mockMvc.perform(get(BASE_URL + "/unauth/trainings"))
+                .andExpect(status().isUnauthorized());
     }
 }

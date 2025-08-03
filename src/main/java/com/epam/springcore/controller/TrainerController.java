@@ -5,6 +5,7 @@ import com.epam.springcore.dto.TrainingDto;
 import com.epam.springcore.request.trainer.CreateTrainerRequest;
 import com.epam.springcore.request.trainer.UpdateTrainerRequest;
 import com.epam.springcore.response.LoginCredentialsResponse;
+import com.epam.springcore.service.ITrainerService;
 import com.epam.springcore.service.impl.TrainerServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,7 +31,7 @@ import java.util.List;
 @Tag(name = "Trainer Resource", description = "SpringCore REST APIs for Trainers")
 public class TrainerController {
 
-    private final TrainerServiceImpl trainerService;
+    private final ITrainerService trainerService;
 
     @Operation(summary = "Create trainer (Public)", description = "Creates a new trainer")
     @ApiResponses(@ApiResponse(responseCode = "201", description = "Created",
