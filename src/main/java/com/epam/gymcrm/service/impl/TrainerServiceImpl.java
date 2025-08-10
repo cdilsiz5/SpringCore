@@ -19,6 +19,7 @@ import com.epam.gymcrm.response.LoginCredentialsResponse;
 import com.epam.gymcrm.service.ITrainerService;
 import com.epam.gymcrm.service.IUserService;
 import com.epam.gymcrm.util.LogUtil;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.logging.MDC;
@@ -38,6 +39,7 @@ public class TrainerServiceImpl implements ITrainerService {
     private final TrainerMapper trainerMapper;
     private final TrainingMapper trainingMapper;
     private final IUserService userService;
+    private final MeterRegistry meterRegistry;
 
 
     @Override
@@ -51,6 +53,7 @@ public class TrainerServiceImpl implements ITrainerService {
                 .build();
         User savedUser = userService.createUserEntity(createUserRequest);
         createTrainerEntity(savedUser, request.getSpecialty());
+        meterRegistry.counter("gymcrm.trainer.created.count").increment();
         return new LoginCredentialsResponse(savedUser.getUsername(), savedUser.getPassword());
     }
 
@@ -134,6 +137,7 @@ public class TrainerServiceImpl implements ITrainerService {
 
     private TrainerDto createTrainerEntity(User user, Specialization specialty) {
         log.info("[{}] SERVICE Layer - Creating Trainer entity for user ID: {}, specialization: {}", MDC.get("transactionId"), user.getId(), specialty);
+        meterRegistry.counter("gymcrm.trainer.created.count").increment();
         Trainer trainer = Trainer.builder()
                 .specialization(specialty)
                 .user(user)

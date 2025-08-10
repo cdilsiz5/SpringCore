@@ -21,6 +21,7 @@ import com.epam.gymcrm.response.LoginCredentialsResponse;
 import com.epam.gymcrm.service.ITraineeService;
 import com.epam.gymcrm.service.IUserService;
 import com.epam.gymcrm.util.LogUtil;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.logging.MDC;
@@ -45,6 +46,7 @@ public class TraineeServiceImpl implements ITraineeService {
     private final TraineeMapper traineeMapper;
     private final IUserService userService;
     private final TrainingTypeRepository trainingTypeRepository;
+    private final MeterRegistry meterRegistry;
 
     @Override
     @Transactional
@@ -58,6 +60,8 @@ public class TraineeServiceImpl implements ITraineeService {
                 .build();
         User savedUser = userService.createUserEntity(createUserRequest);
         createTraineeEntity(savedUser, request);
+
+        meterRegistry.counter("gymcrm.trainee.created.count").increment();
         return new LoginCredentialsResponse(savedUser.getUsername(), savedUser.getPassword());
     }
 

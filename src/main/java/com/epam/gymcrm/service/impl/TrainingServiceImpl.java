@@ -8,7 +8,6 @@ import com.epam.gymcrm.mapper.TrainingTypeMapper;
 import com.epam.gymcrm.model.Trainee;
 import com.epam.gymcrm.model.Trainer;
 import com.epam.gymcrm.model.TrainingType;
-import com.epam.gymcrm.model.enums.Specialization;
 import com.epam.gymcrm.repository.TraineeRepository;
 import com.epam.gymcrm.repository.TrainerRepository;
 import com.epam.gymcrm.repository.TrainingRepository;
@@ -21,10 +20,14 @@ import com.epam.gymcrm.response.TrainingResponse;
 import com.epam.gymcrm.service.ITrainingService;
 import com.epam.gymcrm.service.IUserService;
 import com.epam.gymcrm.util.LogUtil;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.logging.MDC;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -42,42 +45,55 @@ public class TrainingServiceImpl implements ITrainingService {
     private final IUserService userService;
     private final TrainerRepository trainerRepository;
     private final TraineeRepository traineeRepository;
-
+    private final MeterRegistry meterRegistry;
 
 
     @Override
+    @Transactional
     public TrainingDto createTraining(CreateTrainingRequest request) {
-        String txId = LogUtil.getTransactionId();
-        log.info("[{}] SERVICE Layer - Creating training: trainerId={}, traineeId={}, date={}, type={}, duration={}",
+        final String txId = LogUtil.getTransactionId();
+        log.info("[{}] SERVICE - Create training: trainerId={}, traineeId={}, date={}, type={}, duration={}",
                 txId, request.getTrainerId(), request.getTraineeId(), request.getDate(), request.getType(), request.getDurationMinutes());
-        Trainer trainer = trainerRepository.findById(request.getTrainerId())
-                .orElseThrow(() -> new NotFoundException("Trainer not found"));
 
-        Trainee trainee = traineeRepository.findById(request.getTraineeId())
-                .orElseThrow(() -> new NotFoundException("Trainee not found"));
+        if (request.getDurationMinutes() == null || request.getDurationMinutes() <= 0) {
+            throw new IllegalArgumentException("Duration must be positive");
+        }
+        final LocalDate date = LocalDate.parse(request.getDate());
 
-        TrainingType trainingType = trainingTypeRepository.findById(request.getType())
-                .orElseThrow(() -> {
-                    log.warn("[{}] SERVICE Layer - TrainingType not found for id: {}", txId, request.getType());
-                    return new NotFoundException("Training type not found for id: " + request.getType());
+        return Timer.builder("gymcrm.training.create.timer")
+                .description("Training oluşturma süresi")
+                .tag("layer", "service")
+                .register(meterRegistry)
+                .record(() -> {
+                    Trainer trainer = trainerRepository.findById(request.getTrainerId())
+                            .orElseThrow(() -> new NotFoundException("Trainer not found: " + request.getTrainerId()));
+
+                    Trainee trainee = traineeRepository.findById(request.getTraineeId())
+                            .orElseThrow(() -> new NotFoundException("Trainee not found: " + request.getTraineeId()));
+
+                    TrainingType trainingType = trainingTypeRepository.findById(request.getType())
+                            .orElseThrow(() -> {
+                                log.warn("[{}] SERVICE - TrainingType not found: {}", txId, request.getType());
+                                return new NotFoundException("Training type not found: " + request.getType());
+                            });
+
+                    Training toSave = Training.builder()
+                            .date(date)
+                            .durationMinutes(request.getDurationMinutes())
+                            .trainer(trainer)
+                            .trainee(trainee)
+                            .trainingType(trainingType)
+                            .build();
+
+                    Training saved = trainingRepository.save(toSave);
+                    log.info("[{}] SERVICE - Training saved: id={}", txId, saved.getId());
+
+                    meterRegistry.counter("gymcrm.training.created.count").increment();
+
+                    return trainingMapper.toTrainingDto(saved);
                 });
-        Training training = Training.builder()
-                .date(LocalDate.parse(request.getDate()))
-                .durationMinutes(request.getDurationMinutes())
-                .trainer(trainer)
-                .trainee(trainee)
-                .trainingType(trainingType)
-                .build();
-
-        training.setTrainingType(trainingType);
-        training.setDurationMinutes(request.getDurationMinutes());
-        training.setDate(LocalDate.parse(request.getDate()));
-
-        Training saved = trainingRepository.save(training);
-        log.info("[{}] SERVICE Layer - Training saved successfully with ID: {}", txId, saved.getId());
-
-        return trainingMapper.toTrainingDto(saved);
     }
+
 
     @Override
     public TrainingDto getTraining(Long id) {
