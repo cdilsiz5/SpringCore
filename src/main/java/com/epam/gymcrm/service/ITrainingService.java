@@ -1,0 +1,100 @@
+package com.epam.gymcrm.service;
+
+import com.epam.gymcrm.dto.TrainingDto;
+import com.epam.gymcrm.dto.TrainingTypeDto;
+import com.epam.gymcrm.model.Trainee;
+import com.epam.gymcrm.model.Trainer;
+import com.epam.gymcrm.model.TrainingType;
+import com.epam.gymcrm.model.enums.Specialization;
+import com.epam.gymcrm.request.training.CreateTrainingRequest;
+import com.epam.gymcrm.request.training.UpdateTrainingRequest;
+import com.epam.gymcrm.response.TrainingResponse;
+
+import java.time.LocalDate;
+import java.util.List;
+
+/**
+ * Service interface for managing Training sessions.
+ */
+public interface ITrainingService {
+
+    /**
+     * Creates a new training session.
+     *
+     * @param request training creation request
+     * @return created TrainingDto
+     */
+    TrainingDto createTraining(CreateTrainingRequest request);
+
+    /**
+     * Retrieves a training session by ID.
+     *
+     * @param id training session ID
+     * @return the corresponding TrainingDto
+     */
+    TrainingDto getTraining(Long id);
+
+    /**
+     * Returns all training sessions.
+     *
+     * @return list of TrainingDto
+     */
+    List<TrainingDto> getAllTrainings();
+
+    /**
+     * Updates an existing training session.
+     *
+     * @param id      training session ID
+     * @param request update request
+     * @return updated TrainingDto
+     */
+    TrainingDto updateTraining(Long id, UpdateTrainingRequest request);
+
+    /**
+     * Deletes a training session by ID.
+     *
+     * @param id training session ID
+     */
+    void deleteTraining(Long id);
+
+    /**
+     * Retrieves a training List by Trainer
+     *
+     * @param trainer training session ID
+     * @return the corresponding TrainingDto List
+     */
+    List<TrainingDto> findAllByTrainer(Trainer trainer);
+
+    /**
+     * Retrieves a training List byTrainee
+     *
+     * @param trainee training session ID
+     * @return the corresponding TrainingDto List
+     */
+    List<TrainingDto> findAllByTrainee(Trainee trainee);
+
+    /**
+     * Retrieves the TrainingType entity for the given specialization.
+     *
+     * @param name the specialization enum
+     * @return the TrainingType entity
+     */
+    TrainingType findTrainingTypeByName(Specialization name);
+
+    /**
+     * Retrieves all available training types in the system.
+     *
+     * @return list of TrainingType entities
+     */
+    List<TrainingTypeDto> getAllTrainingTypes();
+
+    List<TrainingResponse> findHistoryForTrainer(
+            String username,
+            LocalDate from,
+            LocalDate to,
+            String traineeName,
+            String traineeLastName
+    );
+
+
+}

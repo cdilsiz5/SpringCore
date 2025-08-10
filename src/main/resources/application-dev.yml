@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5434/gym_crm_dev
+    username: dev_user
+    password: dev_pass
+    driver-class-name: org.postgresql.Driver
