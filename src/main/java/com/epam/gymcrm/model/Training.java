@@ -26,19 +26,13 @@ public class Training {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "trainer_id", nullable = false)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
     private Trainer trainer;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "trainee_id", nullable = false)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
     private Trainee trainee;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "training_type_id", nullable = false)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
     private TrainingType trainingType;
 }

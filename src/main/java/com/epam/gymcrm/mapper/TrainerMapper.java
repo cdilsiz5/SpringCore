@@ -1,21 +1,20 @@
 package com.epam.gymcrm.mapper;
 import com.epam.gymcrm.dto.TrainerDto;
 import com.epam.gymcrm.model.Trainer;
-import com.epam.gymcrm.request.trainer.CreateTrainerRequest;
 import com.epam.gymcrm.request.trainer.UpdateTrainerRequest;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
+
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface TrainerMapper {
-
+  @Mapping(target = "trainings", ignore = true)
   TrainerDto toTrainerDto(Trainer trainer);
 
-    List<TrainerDto> toTrainerDtoList(List<Trainer> trainers);
+  @IterableMapping(elementTargetType = TrainerDto.class)
+  List<TrainerDto> toTrainerDtoList(List<Trainer> trainers);
 
-  Trainer createTrainer(CreateTrainerRequest request);
-
-    void updateTrainerRequest(UpdateTrainerRequest request, @MappingTarget Trainer trainer);
+  @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+  void updateTrainerRequest(UpdateTrainerRequest request, @MappingTarget Trainer trainer);
 
 }

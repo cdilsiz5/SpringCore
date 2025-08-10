@@ -57,29 +57,6 @@ public interface ITrainingService {
      */
     void deleteTraining(Long id);
 
-    /**
-     * Retrieves a training List by Trainer
-     *
-     * @param trainer training session ID
-     * @return the corresponding TrainingDto List
-     */
-    List<TrainingDto> findAllByTrainer(Trainer trainer);
-
-    /**
-     * Retrieves a training List byTrainee
-     *
-     * @param trainee training session ID
-     * @return the corresponding TrainingDto List
-     */
-    List<TrainingDto> findAllByTrainee(Trainee trainee);
-
-    /**
-     * Retrieves the TrainingType entity for the given specialization.
-     *
-     * @param name the specialization enum
-     * @return the TrainingType entity
-     */
-    TrainingType findTrainingTypeByName(Specialization name);
 
     /**
      * Retrieves all available training types in the system.
@@ -88,13 +65,7 @@ public interface ITrainingService {
      */
     List<TrainingTypeDto> getAllTrainingTypes();
 
-    List<TrainingResponse> findHistoryForTrainer(
-            String username,
-            LocalDate from,
-            LocalDate to,
-            String traineeName,
-            String traineeLastName
-    );
+
 
 
 }

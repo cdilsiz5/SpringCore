@@ -5,17 +5,18 @@ import com.epam.gymcrm.dto.TrainingDto;
 import com.epam.gymcrm.exception.NotFoundException;
 import com.epam.gymcrm.exception.UnauthorizedException;
 import com.epam.gymcrm.mapper.TrainerMapper;
+import com.epam.gymcrm.mapper.TrainingMapper;
 import com.epam.gymcrm.model.Trainer;
+import com.epam.gymcrm.model.Training;
 import com.epam.gymcrm.model.User;
 import com.epam.gymcrm.model.enums.Specialization;
 import com.epam.gymcrm.repository.TrainerRepository;
+import com.epam.gymcrm.repository.TrainingRepository;
 import com.epam.gymcrm.request.trainer.CreateTrainerRequest;
 import com.epam.gymcrm.request.trainer.UpdateTrainerRequest;
 import com.epam.gymcrm.request.user.CreateUserRequest;
 import com.epam.gymcrm.response.LoginCredentialsResponse;
-import com.epam.gymcrm.response.TrainingResponse;
 import com.epam.gymcrm.service.ITrainerService;
-import com.epam.gymcrm.service.ITrainingService;
 import com.epam.gymcrm.service.IUserService;
 import com.epam.gymcrm.util.LogUtil;
 import lombok.RequiredArgsConstructor;
@@ -33,11 +34,13 @@ import java.util.List;
 public class TrainerServiceImpl implements ITrainerService {
 
     private final TrainerRepository trainerRepository;
+    private final TrainingRepository trainingRepository;
     private final TrainerMapper trainerMapper;
-    private final ITrainingService trainingService;
+    private final TrainingMapper trainingMapper;
     private final IUserService userService;
 
- @Override
+
+    @Override
     public LoginCredentialsResponse createTrainer(CreateTrainerRequest request) {
         String txId = LogUtil.getTransactionId();
         log.info("[{}] SERVICE Layer - Creating trainer via public endpoint", txId);
@@ -55,64 +58,75 @@ public class TrainerServiceImpl implements ITrainerService {
     public TrainerDto getTrainerByUsername(String username) {
         validate(username);
         log.info("[{}] SERVICE Layer - Fetching Trainer by username: {}", MDC.get("transactionId"), username);
-        TrainerDto dto = trainerMapper.toTrainerDto(getTrainerEntityByUsername(username));
-        userService.logout(username);
+
+        Trainer trainer = findTrainerByUsername(username);
+        TrainerDto dto = trainerMapper.toTrainerDto(trainer);
+        validate(username);
         return dto;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TrainerDto> getAllTrainers() {
         log.info("[{}] SERVICE Layer - Fetching all trainers", MDC.get("transactionId"));
         return trainerMapper.toTrainerDtoList(trainerRepository.findAll());
     }
 
     @Override
+    @Transactional
     public TrainerDto updateTrainer(String username, UpdateTrainerRequest request) {
-        validate(username);
         log.info("[{}] SERVICE Layer - Updating Trainer with username: {}", MDC.get("transactionId"), username);
 
-        Trainer trainer = getTrainerEntityByUsername(username);
+        Trainer trainer = findTrainerByUsername(username);
         trainerMapper.updateTrainerRequest(request, trainer);
         Trainer updatedTrainer = trainerRepository.save(trainer);
 
         log.info("[{}] SERVICE Layer - Trainer updated. ID: {}", MDC.get("transactionId"), updatedTrainer.getId());
-        userService.logout(username);
+        validate(username);
         return trainerMapper.toTrainerDto(updatedTrainer);
     }
 
     @Override
+    @Transactional
     public void deleteTrainer(String username) {
-        validate(username);
         log.info("[{}] SERVICE Layer - Deleting Trainer with username: {}", MDC.get("transactionId"), username);
 
-        Trainer trainer = getTrainerEntityByUsername(username);
+        Trainer trainer = findTrainerByUsername(username);
         trainerRepository.delete(trainer);
 
         log.info("[{}] SERVICE Layer - Trainer deleted. ID: {}", MDC.get("transactionId"), trainer.getId());
-        userService.logout(username);
+        validate(username);
     }
 
     @Override
+    @Transactional
     public void toggleActivation(String username) {
-        validate(username);
         log.info("[{}] SERVICE Layer - Toggling activation for user: {}", MDC.get("transactionId"), username);
-        userService.activateOrDeactivate(username);
-        userService.logout(username);
+        
+        Trainer trainer = findTrainerByUsername(username);
+        User user = trainer.getUser();
+        user.setUserActive(!user.isUserActive());
+        trainerRepository.save(trainer);
+        
+        log.info("[{}] SERVICE Layer - User '{}' is now {}", 
+                MDC.get("transactionId"), username, user.isUserActive() ? "ACTIVE" : "INACTIVE");
+        validate(username);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<TrainingResponse> getTrainingHistory(
+    public List<TrainingDto> getTrainingHistory(
             String username, LocalDate from, LocalDate to, String traineeName, String traineeLastName) {
 
-        validate(username);
         log.info("[{}] SERVICE Layer - Fetching training history for trainer: {}",
                 MDC.get("transactionId"), username);
 
-        List<TrainingResponse> result = trainingService
+        List<Training> responses = trainingRepository
                 .findHistoryForTrainer(username, from, to, traineeName, traineeLastName);
+        
+        List<TrainingDto> result = trainingMapper.toTrainingDtoList(responses);
 
-        userService.logout(username);
+        validate(username);
         return result;
     }
 
@@ -139,10 +153,11 @@ public class TrainerServiceImpl implements ITrainerService {
                 });
     }
 
-    private Trainer getTrainerEntityByUsername(String username) {
-        return trainerRepository.findByUserUsername(username)
+    private Trainer findTrainerByUsername(String username) {
+        return trainerRepository.findByUser_Username(username)
                 .orElseThrow(() -> {
-                    log.warn("[{}] SERVICE Layer - Trainer not found with username: {}", MDC.get("transactionId"), username);
+                    log.warn("[{}] SERVICE Layer - Trainer not found with username: {}", 
+                            MDC.get("transactionId"), username);
                     return new NotFoundException("Trainer not found: " + username);
                 });
     }

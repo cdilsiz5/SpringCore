@@ -9,6 +9,8 @@ import com.epam.gymcrm.model.Trainee;
 import com.epam.gymcrm.model.Trainer;
 import com.epam.gymcrm.model.TrainingType;
 import com.epam.gymcrm.model.enums.Specialization;
+import com.epam.gymcrm.repository.TraineeRepository;
+import com.epam.gymcrm.repository.TrainerRepository;
 import com.epam.gymcrm.repository.TrainingRepository;
 import com.epam.gymcrm.dto.TrainingDto;
 import com.epam.gymcrm.model.Training;
@@ -23,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.logging.MDC;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -39,19 +40,35 @@ public class TrainingServiceImpl implements ITrainingService {
     private final TrainingTypeRepository trainingTypeRepository;
     private final TrainingTypeMapper trainingTypeMapper;
     private final IUserService userService;
+    private final TrainerRepository trainerRepository;
+    private final TraineeRepository traineeRepository;
+
+
 
     @Override
     public TrainingDto createTraining(CreateTrainingRequest request) {
         String txId = LogUtil.getTransactionId();
         log.info("[{}] SERVICE Layer - Creating training: trainerId={}, traineeId={}, date={}, type={}, duration={}",
                 txId, request.getTrainerId(), request.getTraineeId(), request.getDate(), request.getType(), request.getDurationMinutes());
+        Trainer trainer = trainerRepository.findById(request.getTrainerId())
+                .orElseThrow(() -> new NotFoundException("Trainer not found"));
 
-        Training training = new Training();
+        Trainee trainee = traineeRepository.findById(request.getTraineeId())
+                .orElseThrow(() -> new NotFoundException("Trainee not found"));
+
         TrainingType trainingType = trainingTypeRepository.findById(request.getType())
                 .orElseThrow(() -> {
                     log.warn("[{}] SERVICE Layer - TrainingType not found for id: {}", txId, request.getType());
                     return new NotFoundException("Training type not found for id: " + request.getType());
                 });
+        Training training = Training.builder()
+                .date(LocalDate.parse(request.getDate()))
+                .durationMinutes(request.getDurationMinutes())
+                .trainer(trainer)
+                .trainee(trainee)
+                .trainingType(trainingType)
+                .build();
+
         training.setTrainingType(trainingType);
         training.setDurationMinutes(request.getDurationMinutes());
         training.setDate(LocalDate.parse(request.getDate()));
@@ -103,45 +120,7 @@ public class TrainingServiceImpl implements ITrainingService {
         userService.logout(SYSTEM_ADMIN_USERNAME);
     }
 
-    @Override
-    public List<TrainingDto> findAllByTrainer(Trainer trainer) {
-        log.info("[{}] SERVICE Layer - Fetching trainings for trainer ID: {}", MDC.get("transactionId"), trainer.getId());
-        List<Training> trainingList = trainingRepository.findAllByTrainer(trainer);
-        log.debug("[{}] SERVICE Layer - Trainings found for trainer ID {}: {}", MDC.get("transactionId"), trainer.getId(), trainingList.size());
-        return trainingMapper.toTrainingDtoList(trainingList);
-    }
 
-    @Override
-    public List<TrainingDto> findAllByTrainee(Trainee trainee) {
-        log.info("[{}] SERVICE Layer - Fetching trainings for trainee ID: {}", MDC.get("transactionId"), trainee.getId());
-        List<Training> trainingList = trainingRepository.findAllByTrainee(trainee);
-        log.debug("[{}] SERVICE Layer - Trainings found for trainee ID {}: {}", MDC.get("transactionId"), trainee.getId(), trainingList.size());
-        return trainingMapper.toTrainingDtoList(trainingList);
-    }
-
-    @Override
-    public TrainingType findTrainingTypeByName(Specialization name) {
-        log.info("[{}] SERVICE Layer - Fetching TrainingType by specialization: {}", MDC.get("transactionId"), name);
-        return trainingTypeRepository.findByName(name)
-                .orElseThrow(() -> {
-                    log.warn("[{}] SERVICE Layer - TrainingType not found for specialization: {}", MDC.get("transactionId"), name);
-                    return new NotFoundException("Training type not found for specialization: " + name);
-                });
-    }
-    @Override
-    public List<TrainingResponse> findHistoryForTrainer(
-            String username,
-            LocalDate from,
-            LocalDate to,
-            String traineeName,
-            String traineeLastName) {
-
-        return trainingRepository
-                .findHistoryForTrainer(username, from, to, traineeName, traineeLastName)
-                .stream()
-                .map(trainingMapper::toResponse)
-                .toList();
-    }
 
     @Override
     public List<TrainingTypeDto> getAllTrainingTypes() {
@@ -165,4 +144,20 @@ public class TrainingServiceImpl implements ITrainingService {
             throw new UnauthorizedException("SystemAdmin not authenticated");
         }
     }
+    private TrainingResponse mapToTrainingResponse(Training training) {
+        return TrainingResponse.builder()
+                .id(training.getId())
+                .traineeId(training.getTrainee().getId())
+                .traineeFirstName(training.getTrainee().getUser().getFirstName())
+                .traineeLastName(training.getTrainee().getUser().getLastName())
+                .trainerId(training.getTrainer().getId())
+                .trainerFirstName(training.getTrainer().getUser().getFirstName())
+                .trainerLastName(training.getTrainer().getUser().getLastName())
+                .trainingTypeId(training.getTrainingType().getId())
+                .trainingTypeName(training.getTrainingType().getName().toString())
+                .date(training.getDate())
+                .durationMinutes(training.getDurationMinutes())
+                .build();
+    }
+
 }

@@ -14,14 +14,18 @@ import java.time.LocalDate;
 public class TrainingResponse {
 
     private Long id;
+
     private Long traineeId;
     private String traineeFirstName;
     private String traineeLastName;
+
     private Long trainerId;
     private String trainerFirstName;
     private String trainerLastName;
+
     private Long trainingTypeId;
     private String trainingTypeName;
+
     private LocalDate date;
     private Integer durationMinutes;
 }

@@ -14,29 +14,30 @@ import java.util.List;
 @Repository
 public interface TrainingRepository  extends JpaRepository<Training,Long> {
 
-    List<Training> findAllByTrainer(Trainer trainers);
-    List<Training> findAllByTrainee(Trainee trainee);
+    List<Training> findAllByTrainer(Trainer trainer);
+    List<Training> findAllByTrainee (Trainee trainer);
+    List<Training> findByTraineeAndTrainerIsNotNull(Trainee trainee);
     @Query("""
-        select distinct t
-        from Training t
-          join fetch t.trainer tr
-          join fetch tr.user uTrainer
-          join fetch t.trainee tn
-          join fetch tn.user uTrainee
-          join fetch t.trainingType tt
-        where uTrainer.username = :username
-          and (:from is null or t.date >= :from)
-          and (:to   is null or t.date <= :to)
-          and (:traineeName     is null or lower(uTrainee.firstName) like lower(concat('%', :traineeName, '%')))
-          and (:traineeLastName is null or lower(uTrainee.lastName)  like lower(concat('%', :traineeLastName, '%')))
-        order by t.date desc, t.id desc
+        SELECT t
+        FROM Training t
+          JOIN FETCH t.trainer tr
+          JOIN FETCH tr.user uTr
+          JOIN FETCH t.trainee tn
+          JOIN FETCH tn.user uTn
+        WHERE uTn.username = :username
+          AND (:from IS NULL OR t.date >= :from)
+          AND (:to IS NULL OR t.date <= :to)
+          AND (:trainerName IS NULL OR LOWER(uTr.firstName) LIKE LOWER(CONCAT('%', :trainerName, '%')))
+          AND (:trainerLastName IS NULL OR LOWER(uTr.lastName) LIKE LOWER(CONCAT('%', :trainerLastName, '%')))
+        ORDER BY t.date DESC, t.id DESC
         """)
     List<Training> findHistoryForTrainer(
             @Param("username") String username,
             @Param("from") LocalDate from,
             @Param("to") LocalDate to,
-            @Param("traineeName") String traineeName,
-            @Param("traineeLastName") String traineeLastName
+            @Param("trainerName") String trainerName,
+            @Param("trainerLastName") String trainerLastName
     );
 
 }
+

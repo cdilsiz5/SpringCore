@@ -12,22 +12,19 @@ import java.util.Optional;
 
 @Repository
 public interface TrainerRepository extends JpaRepository<Trainer, Long> {
+
     Optional<Trainer> findByUserUsername(String username);
-
-        @Query("""
-        select tr
-        from Trainer tr
-        where not exists (
-            select 1
-            from Trainee tn
-                join tn.trainers trx
-            where tn.user.username = :username
-              and trx.id = tr.id
+    Optional<Trainer> findByUser_Username(String username);
+    @Query("""
+        SELECT tr
+        FROM Trainer tr
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM Training t
+            WHERE t.trainer = tr
+              AND t.trainee.user.username = :username
         )
-        order by tr.id desc
+        ORDER BY tr.id ASC
         """)
-        List<Trainer> findUnassignedForTraineeUsername(@Param("username") String username);
-    }
-
-
+    List<Trainer> findUnassignedForTraineeUsername(@Param("username") String username);
 }

@@ -6,28 +6,31 @@ import com.epam.gymcrm.dto.TrainingDto;
 import com.epam.gymcrm.exception.NotFoundException;
 import com.epam.gymcrm.exception.UnauthorizedException;
 import com.epam.gymcrm.mapper.TraineeMapper;
+import com.epam.gymcrm.mapper.TrainerMapper;
+import com.epam.gymcrm.mapper.TrainingMapper;
 import com.epam.gymcrm.model.*;
 import com.epam.gymcrm.repository.TraineeRepository;
+import com.epam.gymcrm.repository.TrainerRepository;
+import com.epam.gymcrm.repository.TrainingRepository;
+import com.epam.gymcrm.repository.TrainingTypeRepository;
 import com.epam.gymcrm.request.trainee.CreateTraineeRequest;
 import com.epam.gymcrm.request.trainee.UpdateTraineeRequest;
 import com.epam.gymcrm.request.trainer.TrainerUsernameRequest;
-import com.epam.gymcrm.request.training.CreateTrainingRequest;
 import com.epam.gymcrm.request.user.CreateUserRequest;
 import com.epam.gymcrm.response.LoginCredentialsResponse;
 import com.epam.gymcrm.service.ITraineeService;
-import com.epam.gymcrm.service.ITrainerService;
-import com.epam.gymcrm.service.ITrainingService;
 import com.epam.gymcrm.service.IUserService;
 import com.epam.gymcrm.util.LogUtil;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.logging.MDC;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -35,10 +38,13 @@ import java.util.stream.Collectors;
 public class TraineeServiceImpl implements ITraineeService {
 
     private final TraineeRepository traineeRepository;
+    private final TrainingRepository trainingRepository;
+    private final TrainerRepository trainerRepository;
+    private final TrainingMapper trainingMapper;
+    private final TrainerMapper trainerMapper;
     private final TraineeMapper traineeMapper;
-    private final ITrainingService trainingService;
-    private final ITrainerService trainerService;
     private final IUserService userService;
+    private final TrainingTypeRepository trainingTypeRepository;
 
     @Override
     @Transactional
@@ -99,87 +105,91 @@ public class TraineeServiceImpl implements ITraineeService {
         userService.logout(username);
     }
 
+
     @Override
-    public List<TrainingDto> getTrainingHistory(String username, LocalDate from, LocalDate to, String trainerName, String trainerLastName) {
+    @Transactional(readOnly = true)
+    public List<TrainingDto> getTrainingHistory(String username,
+                                                LocalDate from,
+                                                LocalDate to,
+                                                String trainerName,
+                                                String trainerLastName) {
         validate(username);
-        log.info("[{}] SERVICE Layer - Getting training history for: {}", MDC.get("transactionId"), username);
+        log.info("[{}] SERVICE - Getting training history for: {}", MDC.get("transactionId"), username);
 
-        Trainee trainee = getTraineeEntityByUsername(username);
+        traineeRepository.findByUserUsername(username)
+                .orElseThrow(() -> new NotFoundException("Trainee not found: " + username));
 
-        List<TrainingDto> result = trainingService.findAllByTrainee(trainee).stream()
-                .filter(t -> from == null || !t.getDate().isBefore(from))
-                .filter(t -> to == null || !t.getDate().isAfter(to))
-                .filter(t -> {
-                    if (trainerName == null && trainerLastName == null) return true;
-                    String first = t.getTrainer().getUser().getFirstName().toLowerCase();
-                    String last = t.getTrainer().getUser().getLastName().toLowerCase();
-                    boolean firstMatch = trainerName == null || first.contains(trainerName.toLowerCase());
-                    boolean lastMatch = trainerLastName == null || last.contains(trainerLastName.toLowerCase());
-                    return firstMatch && lastMatch;
-                })
-                .collect(Collectors.toList());
+        List<Training> trainings = trainingRepository.findHistoryForTrainer(
+                username, from, to, trainerName, trainerLastName
+        );
 
-        userService.logout(username);
-        return result;
+        return trainingMapper.toTrainingDtoList(trainings); // mapper list metodu mevcut
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TrainerDto> getUnassignedTrainers(String authUsername) {
         validate(authUsername);
-        log.info("[{}] SERVICE Layer - Getting unassigned trainers for: {}", MDC.get("transactionId"), authUsername);
+        log.info("[{}] SERVICE - Getting unassigned trainers for: {}", MDC.get("transactionId"), authUsername);
 
-        Trainee trainee = getTraineeEntityByUsername(authUsername);
-        List<TrainerDto> allTrainers = trainerService.getAllTrainers();
+        traineeRepository.findByUserUsername(authUsername)
+                .orElseThrow(() -> new NotFoundException("Trainee not found: " + authUsername)); /* repo mevcut */
 
-        List<TrainerDto> unassigned = allTrainers.stream()
-                .filter(trainer -> !trainer.getTrainings().stream()
-                        .anyMatch(training -> training.getTrainee().equals(trainee)))
-                .collect(Collectors.toList());
-
-        userService.logout(authUsername);
-        return unassigned;
+        List<Trainer> trainers = trainerRepository.findUnassignedForTraineeUsername(authUsername);
+        return trainerMapper.toTrainerDtoList(trainers);
     }
+
+
 
     @Override
     @Transactional
     public List<TrainerDto> updateTrainerList(String username, List<TrainerUsernameRequest> requestList) {
         validate(username);
-        log.info("[{}] SERVICE Layer - Updating trainer list for trainee: {}", MDC.get("transactionId"), username);
+        log.info("[{}] SERVICE Layer - Updating trainer list for trainee: {}",
+                MDC.get("transactionId"), username);
 
-        Trainee trainee = getTraineeEntityByUsername(username);
+        Trainee trainee = traineeRepository.findByUserUsername(username)
+                .orElseThrow(() -> new NotFoundException("Trainee not found: " + username));
 
-        // Remove current assignments
-        List<TrainingDto> currentTrainings = trainingService.findAllByTrainee(trainee).stream()
-                .filter(training -> training.getTrainer() != null)
-                .collect(Collectors.toList());
-
-        for (TrainingDto training : currentTrainings) {
-            training.setTrainer(null);
+        List<Training> currentWithTrainer = trainingRepository
+                .findByTraineeAndTrainerIsNotNull(trainee);
+        for (Training t : currentWithTrainer) {
+            t.setTrainer(null);
+        }
+        if (!currentWithTrainer.isEmpty()) {
+            trainingRepository.saveAll(currentWithTrainer);
         }
 
-        // Assign new trainers
-        List<TrainerDto> assignedTrainers = requestList.stream()
-                .map(req -> {
-                    TrainerDto trainerDto = trainerService.getTrainerByUsername(req.getUsername());
-                    Trainer trainer = trainerService.getTrainerById(trainerDto.getId());
+        List<String> distinctUsernames = requestList.stream()
+                .map(TrainerUsernameRequest::getUsername)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .distinct()
+                .toList();
 
-                    TrainingType trainingType = trainingService.findTrainingTypeByName(trainer.getSpecialization());
+        List<Trainer> assigned = new ArrayList<>();
 
-                    CreateTrainingRequest createRequest = CreateTrainingRequest.builder()
-                            .traineeId(trainee.getId())
-                            .trainerId(trainer.getId())
-                            .type(trainingType.getId())
-                            .date(LocalDate.now().toString())
-                            .durationMinutes(30)
-                            .build();
+        for (String trainerUsername : distinctUsernames) {
+            Trainer trainer = trainerRepository.findByUserUsername(trainerUsername)
+                    .orElseThrow(() -> new NotFoundException("Trainer not found: " + trainerUsername));
 
-                    trainingService.createTraining(createRequest);
-                    return trainerDto;
-                })
-                .collect(Collectors.toList());
+            TrainingType trainingType = trainingTypeRepository
+                    .findByName(trainer.getSpecialization())
+                    .orElseThrow(() -> new NotFoundException(
+                            "TrainingType not found for specialization: " + trainer.getSpecialization()));
 
-        userService.logout(username);
-        return assignedTrainers;
+            Training training = new Training();
+            training.setTrainee(trainee);
+            training.setTrainer(trainer);
+            training.setTrainingType(trainingType);
+            training.setDate(LocalDate.now());
+            training.setDurationMinutes(30);
+
+            trainingRepository.save(training);
+            assigned.add(trainer);
+        }
+        return trainerMapper.toTrainerDtoList(assigned);
     }
 
     @Override
