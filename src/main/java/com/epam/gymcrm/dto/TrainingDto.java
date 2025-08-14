@@ -14,5 +14,5 @@ public class TrainingDto {
     private Integer durationMinutes;
     private TrainerDto trainer;
     private TraineeDto trainee;
-    private TrainingTypeDto trainingType;
+    private String trainingType;
 }

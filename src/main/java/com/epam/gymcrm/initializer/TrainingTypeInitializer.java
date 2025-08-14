@@ -43,7 +43,7 @@ public class TrainingTypeInitializer {
                     .lastName("Admin")
                     .username(ADMIN_USERNAME)
                     .password("admin123")
-                    .userActive(false)
+                    .userActive(true)
                     .build();
             userRepository.save(admin);
         }

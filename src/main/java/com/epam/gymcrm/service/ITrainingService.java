@@ -2,15 +2,8 @@ package com.epam.gymcrm.service;
 
 import com.epam.gymcrm.dto.TrainingDto;
 import com.epam.gymcrm.dto.TrainingTypeDto;
-import com.epam.gymcrm.model.Trainee;
-import com.epam.gymcrm.model.Trainer;
-import com.epam.gymcrm.model.TrainingType;
-import com.epam.gymcrm.model.enums.Specialization;
 import com.epam.gymcrm.request.training.CreateTrainingRequest;
 import com.epam.gymcrm.request.training.UpdateTrainingRequest;
-import com.epam.gymcrm.response.TrainingResponse;
-
-import java.time.LocalDate;
 import java.util.List;
 
 /**

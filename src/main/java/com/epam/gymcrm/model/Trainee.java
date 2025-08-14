@@ -18,7 +18,6 @@ public class Trainee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @ToString.Include
     private Long id;
 
     private LocalDate dateOfBirth;
@@ -26,20 +25,14 @@ public class Trainee {
 
     @OneToOne(optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
     private User user;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "trainee_trainer",
             joinColumns = @JoinColumn(name = "trainee_id"),
             inverseJoinColumns = @JoinColumn(name = "trainer_id"))
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
     private Set<Trainer> trainers;
 
     @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
     private List<Training> trainings;
 }

@@ -18,7 +18,6 @@ public class Trainer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @ToString.Include
     private Long id;
 
     @Enumerated(EnumType.STRING)
@@ -26,17 +25,12 @@ public class Trainer {
 
     @OneToOne(optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
     private User user;
 
     @ManyToMany(mappedBy = "trainers", fetch = FetchType.LAZY)
-    @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Set<Trainee> trainees;
 
     @OneToMany(mappedBy = "trainer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
     private List<Training> trainings;
 }

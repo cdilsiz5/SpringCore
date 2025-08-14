@@ -14,13 +14,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UpdateTrainingRequest {
 
-
-    @NotBlank(message = "Trainee ID cannot be blank")
-    private Long traineeId;
-
-    @NotBlank(message = "Trainer ID cannot be blank")
-    private Long trainerId;
-
     @NotBlank(message = "Training date cannot be blank")
     private String date;
 

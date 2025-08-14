@@ -123,11 +123,11 @@ public class TraineeServiceImpl implements ITraineeService {
         traineeRepository.findByUserUsername(username)
                 .orElseThrow(() -> new NotFoundException("Trainee not found: " + username));
 
-        List<Training> trainings = trainingRepository.findHistoryForTrainer(
+        List<Training> trainings = trainingRepository.findHistoryForTrainee(
                 username, from, to, trainerName, trainerLastName
         );
 
-        return trainingMapper.toTrainingDtoList(trainings); // mapper list metodu mevcut
+        return trainingMapper.toTrainingDtoList(trainings);
     }
 
     @Override

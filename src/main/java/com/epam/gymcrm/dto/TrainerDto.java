@@ -12,6 +12,6 @@ public class TrainerDto {
     private Long id;
     private String specialization;
     private UserDto user;
-    private List<TrainingDto> trainings;
+    private List<TraineeDto> trainees;
 
 }

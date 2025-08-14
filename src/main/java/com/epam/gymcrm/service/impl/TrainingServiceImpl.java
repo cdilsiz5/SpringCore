@@ -16,7 +16,6 @@ import com.epam.gymcrm.model.Training;
 import com.epam.gymcrm.repository.TrainingTypeRepository;
 import com.epam.gymcrm.request.training.CreateTrainingRequest;
 import com.epam.gymcrm.request.training.UpdateTrainingRequest;
-import com.epam.gymcrm.response.TrainingResponse;
 import com.epam.gymcrm.service.ITrainingService;
 import com.epam.gymcrm.service.IUserService;
 import com.epam.gymcrm.util.LogUtil;
@@ -84,7 +83,8 @@ public class TrainingServiceImpl implements ITrainingService {
                             .trainee(trainee)
                             .trainingType(trainingType)
                             .build();
-
+                    trainee.getTrainings().add(toSave);
+                    trainee.getTrainers().add(trainer);
                     Training saved = trainingRepository.save(toSave);
                     log.info("[{}] SERVICE - Training saved: id={}", txId, saved.getId());
 
@@ -159,21 +159,6 @@ public class TrainingServiceImpl implements ITrainingService {
             log.warn("[{}] SERVICE Layer - Unauthorized access by system-admin", MDC.get("transactionId"));
             throw new UnauthorizedException("SystemAdmin not authenticated");
         }
-    }
-    private TrainingResponse mapToTrainingResponse(Training training) {
-        return TrainingResponse.builder()
-                .id(training.getId())
-                .traineeId(training.getTrainee().getId())
-                .traineeFirstName(training.getTrainee().getUser().getFirstName())
-                .traineeLastName(training.getTrainee().getUser().getLastName())
-                .trainerId(training.getTrainer().getId())
-                .trainerFirstName(training.getTrainer().getUser().getFirstName())
-                .trainerLastName(training.getTrainer().getUser().getLastName())
-                .trainingTypeId(training.getTrainingType().getId())
-                .trainingTypeName(training.getTrainingType().getName().toString())
-                .date(training.getDate())
-                .durationMinutes(training.getDurationMinutes())
-                .build();
     }
 
 }
