@@ -23,11 +23,11 @@ public class UserController {
     private final IUserService userService;
 
     @Operation(
-            summary = "User Login",
+            summary = "User login",
             description = "Performs user login using username and password. Activates the session for one request."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Login successful"),
+            @ApiResponse(responseCode = "200", description = "login successful"),
             @ApiResponse(responseCode = "400", description = "Invalid credentials", content = @Content),
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })

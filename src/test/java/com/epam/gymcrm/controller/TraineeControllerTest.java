@@ -10,7 +10,7 @@ import com.epam.gymcrm.filter.TransactionIdFilter;
 import com.epam.gymcrm.request.trainee.CreateTraineeRequest;
 import com.epam.gymcrm.request.trainee.UpdateTraineeRequest;
 import com.epam.gymcrm.request.trainer.TrainerUsernameRequest;
-import com.epam.gymcrm.response.LoginCredentialsResponse;
+import com.epam.gymcrm.response.RegisterProfileResponse;
 import com.epam.gymcrm.service.ITraineeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -61,7 +61,7 @@ class TraineeControllerTest {
     @DisplayName("Should create trainee and return login credentials")
     void testCreateTrainee_success() throws Exception {
         CreateTraineeRequest request = new CreateTraineeRequest("Ali", "Veli", LocalDate.of(1990, 1, 1), "İstanbul");
-        LoginCredentialsResponse response = new LoginCredentialsResponse("ali.veli", "123456");
+        RegisterProfileResponse response = new RegisterProfileResponse("ali.veli", "123456");
 
         when(traineeService.createTrainee(any())).thenReturn(response);
 

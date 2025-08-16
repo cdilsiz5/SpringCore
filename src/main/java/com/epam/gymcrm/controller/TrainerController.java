@@ -4,7 +4,7 @@ import com.epam.gymcrm.dto.TrainerDto;
 import com.epam.gymcrm.dto.TrainingDto;
 import com.epam.gymcrm.request.trainer.CreateTrainerRequest;
 import com.epam.gymcrm.request.trainer.UpdateTrainerRequest;
-import com.epam.gymcrm.response.LoginCredentialsResponse;
+import com.epam.gymcrm.response.RegisterProfileResponse;
 import com.epam.gymcrm.service.ITrainerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -38,7 +38,7 @@ public class TrainerController {
                     schema = @Schema(implementation = TrainerDto.class))))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<LoginCredentialsResponse> createTrainer(@RequestBody @Valid CreateTrainerRequest request) {
+    public ResponseEntity<RegisterProfileResponse> createTrainer(@RequestBody @Valid CreateTrainerRequest request) {
         return ResponseEntity.ok(trainerService.createTrainer(request));
     }
 

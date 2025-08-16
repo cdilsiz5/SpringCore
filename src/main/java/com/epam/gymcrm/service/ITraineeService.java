@@ -7,7 +7,7 @@ import com.epam.gymcrm.model.Trainee;
 import com.epam.gymcrm.request.trainee.CreateTraineeRequest;
 import com.epam.gymcrm.request.trainee.UpdateTraineeRequest;
 import com.epam.gymcrm.request.trainer.TrainerUsernameRequest;
-import com.epam.gymcrm.response.LoginCredentialsResponse;
+import com.epam.gymcrm.response.RegisterProfileResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,7 +23,7 @@ public interface ITraineeService {
      * @param request the trainee creation request
      * @return the created trainee DTO
      */
-    LoginCredentialsResponse createTrainee(CreateTraineeRequest request);
+    RegisterProfileResponse createTrainee(CreateTraineeRequest request);
 
     /**
      * Retrieves a specific trainee by their username.

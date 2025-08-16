@@ -2,9 +2,10 @@ package com.epam.gymcrm.exception;
 
 
 
+import lombok.Data;
 import org.springframework.http.HttpStatus;
 
-
+@Data
 public class ApiException extends RuntimeException  {
     private static final long serialVersionUID = 1L;
 
@@ -18,7 +19,4 @@ public class ApiException extends RuntimeException  {
         return httpStatus;
     }
 
-    public void setHttpStatus(HttpStatus httpStatus) {
-        this.httpStatus = httpStatus;
-    }
 }

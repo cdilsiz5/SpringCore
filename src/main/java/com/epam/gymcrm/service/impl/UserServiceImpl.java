@@ -3,21 +3,35 @@ package com.epam.gymcrm.service.impl;
 import com.epam.gymcrm.dto.UserDto;
 import com.epam.gymcrm.exception.InvalidCredentialsException;
 import com.epam.gymcrm.exception.NotFoundException;
+import com.epam.gymcrm.exception.UserNotFoundException;
 import com.epam.gymcrm.mapper.UserMapper;
 import com.epam.gymcrm.model.User;
+import com.epam.gymcrm.model.enums.RoleType;
 import com.epam.gymcrm.repository.UserRepository;
 import com.epam.gymcrm.request.user.ChangePasswordRequest;
 import com.epam.gymcrm.request.user.CreateUserRequest;
 import com.epam.gymcrm.request.user.LoginRequest;
+import com.epam.gymcrm.response.JwtResponse;
+import com.epam.gymcrm.security.UserDetailsImpl;
+import com.epam.gymcrm.security.service.JwtTokenService;
 import com.epam.gymcrm.service.IUserService;
 import com.epam.gymcrm.util.CredentialGenerator;
 import com.epam.gymcrm.util.LogUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 
 
@@ -25,32 +39,63 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements IUserService {
-
+    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
+    private final JwtTokenService jwtTokenService;
     private final UserMapper userMapper;
     private final CredentialGenerator credentialGenerator;
 
     @Override
     public boolean login(LoginRequest request) {
-        String txId = LogUtil.getTransactionId();
-        log.info("[{}] SERVICE Layer - Attempting login for user: {}", txId, request.getUsername());
 
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> {
-                    log.warn("[{}] SERVICE Layer - Login failed - username not found: {}", txId, request.getUsername());
+                    log.warn("[{}] SERVICE Layer - login failed - username not found: {}", txId, request.getUsername());
                     return new InvalidCredentialsException("Invalid username or password");
                 });
 
         if (!user.getPassword().equals(request.getPassword())) {
-            log.warn("[{}] SERVICE Layer - Login failed - wrong password for user: {}", txId, request.getUsername());
+            log.warn("[{}] SERVICE Layer - login failed - wrong password for user: {}", txId, request.getUsername());
             throw new InvalidCredentialsException("Invalid password");
         }
 
         user.setUserActive(true);
         userRepository.save(user);
-        log.info("[{}] SERVICE Layer - Login successful - user '{}' is now active", txId, user.getUsername());
+        log.info("[{}] SERVICE Layer - login successful - user '{}' is now active", txId, user.getUsername());
         return true;
     }
+    public ResponseEntity<?> login(LoginRequest request) {
+        String txId = LogUtil.getTransactionId();
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsername(), request.getPassword())
+            );
+            log.info("[{}] SERVICE Layer - Attempting login for user: {}", txId, request.getUsername());
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+            String accessToken = jwtTokenService.generateJwtToken(userDetails);
+
+            User user = userRepository.findByUsername(request.getUsername())
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+            return ResponseEntity.ok(new JwtResponse(accessToken,userMapper.toUserDto(user)
+            ));
+
+        } catch (DisabledException e) {
+            log.error("Account disabled for user: {}", request.getUsername());
+            throw new DisabledException("Account disabled");
+        } catch (BadCredentialsException e) {
+            log.error("Invalid credentials for user: {}", request.getUsername());
+            throw new BadCredentialsException("Invalid credentials");
+        } catch (UsernameNotFoundException e) {
+            log.error("User not found: {}", request.getUsername());
+            throw new UsernameNotFoundException("User not found");
+        }
+    }
+
 
     @Override
     public void logout(String username) {
@@ -188,7 +233,9 @@ public class UserServiceImpl implements IUserService {
                 .lastName(request.getLastName())
                 .userActive(false)
                 .build();
-
+        HashSet roles= new HashSet();
+        roles.add(RoleType.ADMIN);
+        user.setRoles(roles);
         User savedUser = userRepository.save(user);
 
         log.info("[{}] SERVICE Layer - User created with username: {}", txId, savedUser.getUsername());

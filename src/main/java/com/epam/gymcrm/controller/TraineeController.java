@@ -6,7 +6,7 @@ import com.epam.gymcrm.dto.TrainingDto;
 import com.epam.gymcrm.request.trainee.CreateTraineeRequest;
 import com.epam.gymcrm.request.trainee.UpdateTraineeRequest;
 import com.epam.gymcrm.request.trainer.TrainerUsernameRequest;
-import com.epam.gymcrm.response.LoginCredentialsResponse;
+import com.epam.gymcrm.response.RegisterProfileResponse;
 import com.epam.gymcrm.service.ITraineeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,7 +39,7 @@ public class TraineeController {
             @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<LoginCredentialsResponse> createTrainee(@RequestBody @Valid CreateTraineeRequest request) {
+    public ResponseEntity<RegisterProfileResponse> createTrainee(@RequestBody @Valid CreateTraineeRequest request) {
         return ResponseEntity.ok(traineeService.createTrainee(request));
     }
 

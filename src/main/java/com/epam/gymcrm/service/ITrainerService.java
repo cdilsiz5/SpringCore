@@ -5,7 +5,7 @@ import com.epam.gymcrm.dto.TrainingDto;
 import com.epam.gymcrm.model.Trainer;
 import com.epam.gymcrm.request.trainer.CreateTrainerRequest;
 import com.epam.gymcrm.request.trainer.UpdateTrainerRequest;
-import com.epam.gymcrm.response.LoginCredentialsResponse;
+import com.epam.gymcrm.response.RegisterProfileResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,7 +18,7 @@ public interface ITrainerService {
      * @param request trainer creation request
      * @return created TrainerDto
      */
-    LoginCredentialsResponse createTrainer(CreateTrainerRequest request);
+    RegisterProfileResponse createTrainer(CreateTrainerRequest request);
 
     /**
      * Retrieves a trainer by username.

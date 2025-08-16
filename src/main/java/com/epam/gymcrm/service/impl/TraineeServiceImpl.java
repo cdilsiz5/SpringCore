@@ -4,7 +4,6 @@ import com.epam.gymcrm.dto.TraineeDto;
 import com.epam.gymcrm.dto.TrainerDto;
 import com.epam.gymcrm.dto.TrainingDto;
 import com.epam.gymcrm.exception.NotFoundException;
-import com.epam.gymcrm.exception.UnauthorizedException;
 import com.epam.gymcrm.mapper.TraineeMapper;
 import com.epam.gymcrm.mapper.TrainerMapper;
 import com.epam.gymcrm.mapper.TrainingMapper;
@@ -17,7 +16,7 @@ import com.epam.gymcrm.request.trainee.CreateTraineeRequest;
 import com.epam.gymcrm.request.trainee.UpdateTraineeRequest;
 import com.epam.gymcrm.request.trainer.TrainerUsernameRequest;
 import com.epam.gymcrm.request.user.CreateUserRequest;
-import com.epam.gymcrm.response.LoginCredentialsResponse;
+import com.epam.gymcrm.response.RegisterProfileResponse;
 import com.epam.gymcrm.service.ITraineeService;
 import com.epam.gymcrm.service.IUserService;
 import com.epam.gymcrm.util.LogUtil;
@@ -50,7 +49,7 @@ public class TraineeServiceImpl implements ITraineeService {
 
     @Override
     @Transactional
-    public LoginCredentialsResponse createTrainee(CreateTraineeRequest request) {
+    public RegisterProfileResponse createTrainee(CreateTraineeRequest request) {
         String txId = LogUtil.getTransactionId();
         if (txId == null) txId = "N/A";
         log.info("[{}] SERVICE Layer - Creating trainee via public endpoint", txId);
@@ -62,12 +61,11 @@ public class TraineeServiceImpl implements ITraineeService {
         createTraineeEntity(savedUser, request);
 
         meterRegistry.counter("gymcrm.trainee.created.count").increment();
-        return new LoginCredentialsResponse(savedUser.getUsername(), savedUser.getPassword());
+        return new RegisterProfileResponse(savedUser.getUsername(), savedUser.getPassword());
     }
 
     @Override
     public TraineeDto getTraineeByUsername(String username) {
-        validate(username);
         log.info("[{}] SERVICE Layer - Fetching Trainee by username: {}", MDC.get("transactionId"), username);
         TraineeDto dto = traineeMapper.toTraineeDto(getTraineeEntityByUsername(username));
         userService.logout(username);
@@ -83,7 +81,6 @@ public class TraineeServiceImpl implements ITraineeService {
 
     @Override
     public TraineeDto updateTrainee(String username, UpdateTraineeRequest request) {
-        validate(username);
         log.info("[{}] SERVICE Layer - Updating Trainee: {}", MDC.get("transactionId"), username);
         Trainee trainee = getTraineeEntityByUsername(username);
         traineeMapper.updateTraineeRequest(request, trainee);
@@ -94,7 +91,6 @@ public class TraineeServiceImpl implements ITraineeService {
 
     @Override
     public void deleteTrainee(String username) {
-        validate(username);
         log.info("[{}] SERVICE Layer - Deleting Trainee: {}", MDC.get("transactionId"), username);
         Trainee trainee = getTraineeEntityByUsername(username);
         traineeRepository.delete(trainee);
@@ -103,7 +99,6 @@ public class TraineeServiceImpl implements ITraineeService {
 
     @Override
     public void toggleActivation(String username) {
-        validate(username);
         log.info("[{}] SERVICE Layer - Toggling activation for: {}", MDC.get("transactionId"), username);
         userService.activateOrDeactivate(username);
         userService.logout(username);
@@ -117,7 +112,6 @@ public class TraineeServiceImpl implements ITraineeService {
                                                 LocalDate to,
                                                 String trainerName,
                                                 String trainerLastName) {
-        validate(username);
         log.info("[{}] SERVICE - Getting training history for: {}", MDC.get("transactionId"), username);
 
         traineeRepository.findByUserUsername(username)
@@ -133,7 +127,6 @@ public class TraineeServiceImpl implements ITraineeService {
     @Override
     @Transactional(readOnly = true)
     public List<TrainerDto> getUnassignedTrainers(String authUsername) {
-        validate(authUsername);
         log.info("[{}] SERVICE - Getting unassigned trainers for: {}", MDC.get("transactionId"), authUsername);
 
         traineeRepository.findByUserUsername(authUsername)
@@ -148,7 +141,6 @@ public class TraineeServiceImpl implements ITraineeService {
     @Override
     @Transactional
     public List<TrainerDto> updateTrainerList(String username, List<TrainerUsernameRequest> requestList) {
-        validate(username);
         log.info("[{}] SERVICE Layer - Updating trainer list for trainee: {}",
                 MDC.get("transactionId"), username);
 
@@ -214,12 +206,6 @@ public class TraineeServiceImpl implements ITraineeService {
                 });
     }
 
-    private void validate(String authUsername) {
-        if (!userService.isAuthenticated(authUsername)) {
-            log.warn("[{}] SERVICE Layer - Unauthorized access attempt for: {}", MDC.get("transactionId"), authUsername);
-            throw new UnauthorizedException("User not authenticated: " + authUsername);
-        }
-    }
 
     private TraineeDto createTraineeEntity(User user, CreateTraineeRequest request) {
         log.info("[{}] SERVICE Layer - Creating Trainee entity for user ID: {}", MDC.get("transactionId"), user.getId());

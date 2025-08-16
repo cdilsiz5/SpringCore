@@ -3,7 +3,6 @@ package com.epam.gymcrm.service.impl;
 import com.epam.gymcrm.dto.TrainerDto;
 import com.epam.gymcrm.dto.TrainingDto;
 import com.epam.gymcrm.exception.NotFoundException;
-import com.epam.gymcrm.exception.UnauthorizedException;
 import com.epam.gymcrm.mapper.TrainerMapper;
 import com.epam.gymcrm.mapper.TrainingMapper;
 import com.epam.gymcrm.model.Trainer;
@@ -15,7 +14,7 @@ import com.epam.gymcrm.repository.TrainingRepository;
 import com.epam.gymcrm.request.trainer.CreateTrainerRequest;
 import com.epam.gymcrm.request.trainer.UpdateTrainerRequest;
 import com.epam.gymcrm.request.user.CreateUserRequest;
-import com.epam.gymcrm.response.LoginCredentialsResponse;
+import com.epam.gymcrm.response.RegisterProfileResponse;
 import com.epam.gymcrm.service.ITrainerService;
 import com.epam.gymcrm.service.IUserService;
 import com.epam.gymcrm.util.LogUtil;
@@ -43,7 +42,7 @@ public class TrainerServiceImpl implements ITrainerService {
 
 
     @Override
-    public LoginCredentialsResponse createTrainer(CreateTrainerRequest request) {
+    public RegisterProfileResponse createTrainer(CreateTrainerRequest request) {
         String txId = LogUtil.getTransactionId();
         log.info("[{}] SERVICE Layer - Creating trainer via public endpoint", txId);
 
@@ -54,17 +53,14 @@ public class TrainerServiceImpl implements ITrainerService {
         User savedUser = userService.createUserEntity(createUserRequest);
         createTrainerEntity(savedUser, request.getSpecialty());
         meterRegistry.counter("gymcrm.trainer.created.count").increment();
-        return new LoginCredentialsResponse(savedUser.getUsername(), savedUser.getPassword());
+        return new RegisterProfileResponse(savedUser.getUsername(), savedUser.getPassword());
     }
 
     @Override
     public TrainerDto getTrainerByUsername(String username) {
-        validate(username);
         log.info("[{}] SERVICE Layer - Fetching Trainer by username: {}", MDC.get("transactionId"), username);
-
         Trainer trainer = findTrainerByUsername(username);
         TrainerDto dto = trainerMapper.toTrainerDto(trainer);
-        validate(username);
         return dto;
     }
 
@@ -85,7 +81,6 @@ public class TrainerServiceImpl implements ITrainerService {
         Trainer updatedTrainer = trainerRepository.save(trainer);
 
         log.info("[{}] SERVICE Layer - Trainer updated. ID: {}", MDC.get("transactionId"), updatedTrainer.getId());
-        validate(username);
         return trainerMapper.toTrainerDto(updatedTrainer);
     }
 
@@ -98,22 +93,20 @@ public class TrainerServiceImpl implements ITrainerService {
         trainerRepository.delete(trainer);
 
         log.info("[{}] SERVICE Layer - Trainer deleted. ID: {}", MDC.get("transactionId"), trainer.getId());
-        validate(username);
     }
 
     @Override
     @Transactional
     public void toggleActivation(String username) {
         log.info("[{}] SERVICE Layer - Toggling activation for user: {}", MDC.get("transactionId"), username);
-        
+
         Trainer trainer = findTrainerByUsername(username);
         User user = trainer.getUser();
         user.setUserActive(!user.isUserActive());
         trainerRepository.save(trainer);
-        
-        log.info("[{}] SERVICE Layer - User '{}' is now {}", 
+
+        log.info("[{}] SERVICE Layer - User '{}' is now {}",
                 MDC.get("transactionId"), username, user.isUserActive() ? "ACTIVE" : "INACTIVE");
-        validate(username);
     }
 
     @Override
@@ -129,7 +122,6 @@ public class TrainerServiceImpl implements ITrainerService {
         
         List<TrainingDto> result = trainingMapper.toTrainingDtoList(responses);
 
-        validate(username);
         return result;
     }
 
@@ -166,10 +158,5 @@ public class TrainerServiceImpl implements ITrainerService {
                 });
     }
 
-    private void validate(String username) {
-        if (!userService.isAuthenticated(username)) {
-            log.warn("[{}] SERVICE Layer - Unauthorized access attempt for: {}", MDC.get("transactionId"), username);
-            throw new UnauthorizedException("User not authenticated: " + username);
-        }
-    }
+  
 }

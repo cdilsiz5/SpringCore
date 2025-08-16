@@ -41,3 +41,7 @@ openapi:
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
+
+security:
+  jwt:
+    secret: 7A74h6Ne+6Dw2EQZ0VL7YpTeLYYa6iZ9Z3dJq1LC3Yg=
