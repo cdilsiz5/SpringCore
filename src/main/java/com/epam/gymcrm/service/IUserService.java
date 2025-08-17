@@ -5,6 +5,8 @@ import com.epam.gymcrm.model.User;
 import com.epam.gymcrm.request.user.ChangePasswordRequest;
 import com.epam.gymcrm.request.user.CreateUserRequest;
 import com.epam.gymcrm.request.user.LoginRequest;
+import com.epam.gymcrm.response.JwtResponse;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -18,9 +20,9 @@ public interface IUserService {
      * Logs in the user by validating credentials and activating the session.
      *
      * @param request the login request containing username and password
-     * @return true if login is successful
+     * @return JwtResponse if login is successful
      */
-    boolean login(LoginRequest request);
+    ResponseEntity<JwtResponse> login(LoginRequest request);
 
     /**
      * Logs out the user by setting their isActive flag to false.
@@ -71,7 +73,7 @@ public interface IUserService {
      * Toggles the active/passive status of the specified user.
      * @param targetUsername the username of the user whose activation status will be toggled
      */
-    void activateOrDeactivate(String targetUsername);
+    void activateOrDeactivate(String targetUsername,boolean activate);
 
     /**
      * Logs out the currently authenticated user by removing them from the session registry.

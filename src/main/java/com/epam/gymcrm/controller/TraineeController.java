@@ -100,11 +100,11 @@ public class TraineeController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "404", description = "Trainee not found")
     })
-    @PatchMapping("/{username}/toggle-activation")
-    public ResponseEntity<Void> toggleTraineeActivation(
+    @PatchMapping("/{username}/change-activation")
+    public ResponseEntity<Void> changeTraineeActivation(
 
-            @PathVariable String username) {
-        traineeService.toggleActivation(username);
+            @PathVariable String username,@RequestParam boolean activate){
+        traineeService.changeTraineeActivation(username,activate);
         return ResponseEntity.ok().build();
     }
 

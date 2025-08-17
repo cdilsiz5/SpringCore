@@ -62,7 +62,7 @@ public interface ITraineeService {
      *
      * @param username      the username of the trainee to toggle activation for
      */
-    void toggleActivation( String username);
+    void changeTraineeActivation( String username,boolean activate);
 
     /**
      * Retrieves the training history for a trainee with optional filters.

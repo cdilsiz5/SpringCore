@@ -7,6 +7,7 @@ import com.epam.gymcrm.model.User;
 import com.epam.gymcrm.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
  import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 @RequiredArgsConstructor
 @Slf4j
+@Configuration
 public class UserDetailsConfiguration implements UserDetailsService {
     private final UserRepository userRepository;
 

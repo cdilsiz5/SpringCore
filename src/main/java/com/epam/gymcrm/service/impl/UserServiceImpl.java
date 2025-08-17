@@ -3,6 +3,7 @@ package com.epam.gymcrm.service.impl;
 import com.epam.gymcrm.dto.UserDto;
 import com.epam.gymcrm.exception.InvalidCredentialsException;
 import com.epam.gymcrm.exception.NotFoundException;
+import com.epam.gymcrm.exception.UnauthorizedException;
 import com.epam.gymcrm.exception.UserNotFoundException;
 import com.epam.gymcrm.mapper.UserMapper;
 import com.epam.gymcrm.model.User;
@@ -13,6 +14,7 @@ import com.epam.gymcrm.request.user.CreateUserRequest;
 import com.epam.gymcrm.request.user.LoginRequest;
 import com.epam.gymcrm.response.JwtResponse;
 import com.epam.gymcrm.security.UserDetailsImpl;
+import com.epam.gymcrm.security.loginattempt.LoginAttemptService;
 import com.epam.gymcrm.security.service.JwtTokenService;
 import com.epam.gymcrm.service.IUserService;
 import com.epam.gymcrm.util.CredentialGenerator;
@@ -28,6 +30,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,57 +47,58 @@ public class UserServiceImpl implements IUserService {
     private final JwtTokenService jwtTokenService;
     private final UserMapper userMapper;
     private final CredentialGenerator credentialGenerator;
+    private final LoginAttemptService loginAttemptService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public boolean login(LoginRequest request) {
+    public ResponseEntity<JwtResponse> login(LoginRequest request) {
+        String txId = LogUtil.getTransactionId();
+        log.info("[{}] SERVICE Layer - Attempting login for user: {}", txId, request.getUsername());
 
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> {
-                    log.warn("[{}] SERVICE Layer - login failed - username not found: {}", txId, request.getUsername());
-                    return new InvalidCredentialsException("Invalid username or password");
-                });
+        String username = request.getUsername();
 
-        if (!user.getPassword().equals(request.getPassword())) {
-            log.warn("[{}] SERVICE Layer - login failed - wrong password for user: {}", txId, request.getUsername());
-            throw new InvalidCredentialsException("Invalid password");
+        if (loginAttemptService.isBlocked(username)) {
+            long waitSeconds = loginAttemptService.remainingBlockSeconds(username);
+            log.warn("[{}] SERVICE Layer - User '{}' is blocked. Must wait {} seconds before retrying.",
+                    txId, username, waitSeconds);
+            throw new UnauthorizedException("Too many failed attempts. Try again in " + waitSeconds + " seconds.");
         }
 
-        user.setUserActive(true);
-        userRepository.save(user);
-        log.info("[{}] SERVICE Layer - login successful - user '{}' is now active", txId, user.getUsername());
-        return true;
-    }
-    public ResponseEntity<?> login(LoginRequest request) {
-        String txId = LogUtil.getTransactionId();
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getUsername(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(username, request.getPassword())
             );
-            log.info("[{}] SERVICE Layer - Attempting login for user: {}", txId, request.getUsername());
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
             String accessToken = jwtTokenService.generateJwtToken(userDetails);
 
-            User user = userRepository.findByUsername(request.getUsername())
+            User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-            return ResponseEntity.ok(new JwtResponse(accessToken,userMapper.toUserDto(user)
-            ));
+            loginAttemptService.loginSucceeded(username);
+
+            log.info("[{}] SERVICE Layer - login successful for user '{}'", txId, user.getUsername());
+
+            return ResponseEntity.ok(
+                    new JwtResponse(accessToken, userMapper.toUserDto(user))
+            );
 
         } catch (DisabledException e) {
-            log.error("Account disabled for user: {}", request.getUsername());
+            log.error("[{}] SERVICE Layer - Account disabled for user: {}", txId, username);
             throw new DisabledException("Account disabled");
         } catch (BadCredentialsException e) {
-            log.error("Invalid credentials for user: {}", request.getUsername());
+            loginAttemptService.loginFailed(username);
+            log.error("[{}] SERVICE Layer - Invalid credentials for user: {}", txId, username);
             throw new BadCredentialsException("Invalid credentials");
         } catch (UsernameNotFoundException e) {
-            log.error("User not found: {}", request.getUsername());
+            loginAttemptService.loginFailed(username);
+            log.error("[{}] SERVICE Layer - User not found: {}", txId, username);
             throw new UsernameNotFoundException("User not found");
         }
     }
+
 
 
     @Override
@@ -108,9 +112,8 @@ public class UserServiceImpl implements IUserService {
                     return new NotFoundException("User not found: " + username);
                 });
 
-        user.setUserActive(false);
-        userRepository.save(user);
-        log.info("[{}] SERVICE Layer - Logout successful - user '{}' is now inactive", txId, username);
+        SecurityContextHolder.clearContext();
+        log.info("[{}] SERVICE Layer - Logout successful ", txId);
     }
 
     @Override
@@ -190,7 +193,7 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     @Transactional
-    public void activateOrDeactivate(String targetUsername) {
+    public void activateOrDeactivate(String targetUsername,boolean activate) {
         String txId = MDC.get("transactionId");
         log.info("[{}] SERVICE Layer - Toggling activation for user: {}", txId, targetUsername);
 
@@ -200,7 +203,7 @@ public class UserServiceImpl implements IUserService {
                     return new NotFoundException("User not found: " + targetUsername);
                 });
 
-        user.setUserActive(!user.isUserActive());
+        user.setUserActive(activate);
         userRepository.save(user);
         log.info("[{}] SERVICE Layer - User '{}' is now {}", txId, targetUsername, user.isUserActive() ? "ACTIVE" : "INACTIVE");
     }
@@ -224,20 +227,22 @@ public class UserServiceImpl implements IUserService {
         log.info("[{}] SERVICE Layer - Creating new user for {} {}", txId, request.getFirstName(), request.getLastName());
 
         String username = credentialGenerator.generateUsername(request.getFirstName(), request.getLastName(), userRepository.findAll());
-        String password = credentialGenerator.generateRandomPassword();
-
+        String plainPassword = credentialGenerator.generateRandomPassword();
+        String hashedPassword=passwordEncoder.encode(plainPassword);
+        System.out.println(hashedPassword);
         User user = User.builder()
                 .username(username)
-                .password(password)
+                .password(hashedPassword)
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .userActive(false)
+                .plainPassword(plainPassword)
+                .userActive(true)
                 .build();
+
         HashSet roles= new HashSet();
         roles.add(RoleType.ADMIN);
         user.setRoles(roles);
         User savedUser = userRepository.save(user);
-
         log.info("[{}] SERVICE Layer - User created with username: {}", txId, savedUser.getUsername());
         return savedUser;
     }

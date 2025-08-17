@@ -121,7 +121,7 @@ class TrainerControllerTest {
     @Test
     @DisplayName("Should toggle trainer's active status")
     void testToggleActivation_success() throws Exception {
-        doNothing().when(trainerService).toggleActivation("john.doe");
+        doNothing().when(trainerService).changeTrainerActivation("john.doe",true);
 
         mockMvc.perform(patch(BASE_URL + "/john.doe/toggle-activation"))
                 .andExpect(status().isOk());
@@ -131,7 +131,7 @@ class TrainerControllerTest {
     @DisplayName("Should return 404 when toggling unknown trainer's activation")
     void testToggleTrainerActivation_notFound() throws Exception {
         doThrow(new NotFoundException("Trainer not found"))
-                .when(trainerService).toggleActivation("unknown");
+                .when(trainerService).changeTrainerActivation("john.doe",true);
 
         mockMvc.perform(patch(BASE_URL + "/unknown/toggle-activation"))
                 .andExpect(status().isNotFound());

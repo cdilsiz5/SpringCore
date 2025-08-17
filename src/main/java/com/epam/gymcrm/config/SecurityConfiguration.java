@@ -3,6 +3,7 @@ package com.epam.gymcrm.config;
 import com.epam.gymcrm.security.filter.JwtAuthFilter;
 import com.epam.gymcrm.security.handler.RestAccessDeniedHandler;
 import com.epam.gymcrm.security.handler.RestAuthenticationEntryPoint;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +23,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfiguration {
-
+    private final ObjectMapper objectMapper;
     private final UserDetailsService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthFilter jwtAuthFilter;
@@ -63,12 +64,12 @@ public class SecurityConfiguration {
 
     @Bean
     public RestAuthenticationEntryPoint authenticationEntryPoint() {
-        return new RestAuthenticationEntryPoint();
+        return new RestAuthenticationEntryPoint(objectMapper);
     }
 
     @Bean
     public RestAccessDeniedHandler accessDeniedHandler() {
-        return new RestAccessDeniedHandler();
+        return new RestAccessDeniedHandler(objectMapper);
     }
 
     @Bean

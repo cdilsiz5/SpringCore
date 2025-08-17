@@ -56,7 +56,7 @@ public interface ITrainerService {
      *
      * @param username trainer username to toggle
      */
-    void toggleActivation( String username);
+    void changeTrainerActivation(String username,boolean activate);
 
     /**
      * Returns a trainer's training history with optional filters (requires authentication).

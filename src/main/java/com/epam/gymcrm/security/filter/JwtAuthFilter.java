@@ -40,15 +40,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         final String jwtToken = authHeader.substring(7);
-        String email = jwtTokenService.extractUsername(jwtToken);
+        String username = jwtTokenService.extractUsername(jwtToken);
 
         log.info("Token: {}", jwtToken);
-        log.info("Extracted email: {}", email);
+        log.info("Extracted username: {}", username);
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null
                 && jwtTokenService.validateToken(jwtToken)) {
 
-            UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(email);
+            UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(username);
 
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities()
@@ -57,7 +57,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
-            log.info("Authentication set for user: {}", email);
+            log.info("Authentication set for user: {}", username);
         } else {
             log.warn("JWT validation failed or user already authenticated.");
         }

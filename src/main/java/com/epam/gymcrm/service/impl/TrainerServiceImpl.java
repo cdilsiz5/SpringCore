@@ -53,7 +53,7 @@ public class TrainerServiceImpl implements ITrainerService {
         User savedUser = userService.createUserEntity(createUserRequest);
         createTrainerEntity(savedUser, request.getSpecialty());
         meterRegistry.counter("gymcrm.trainer.created.count").increment();
-        return new RegisterProfileResponse(savedUser.getUsername(), savedUser.getPassword());
+        return new RegisterProfileResponse(savedUser.getUsername(), savedUser.getPlainPassword());
     }
 
     @Override
@@ -97,16 +97,12 @@ public class TrainerServiceImpl implements ITrainerService {
 
     @Override
     @Transactional
-    public void toggleActivation(String username) {
+    public void changeTrainerActivation(String username,boolean activate) {
         log.info("[{}] SERVICE Layer - Toggling activation for user: {}", MDC.get("transactionId"), username);
-
         Trainer trainer = findTrainerByUsername(username);
-        User user = trainer.getUser();
-        user.setUserActive(!user.isUserActive());
-        trainerRepository.save(trainer);
-
+        userService.activateOrDeactivate(username, activate);
         log.info("[{}] SERVICE Layer - User '{}' is now {}",
-                MDC.get("transactionId"), username, user.isUserActive() ? "ACTIVE" : "INACTIVE");
+                MDC.get("transactionId"), username, trainer.getUser().isUserActive() ? "ACTIVE" : "INACTIVE");
     }
 
     @Override

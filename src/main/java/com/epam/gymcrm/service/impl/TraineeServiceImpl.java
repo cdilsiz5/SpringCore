@@ -24,6 +24,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.logging.MDC;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +62,7 @@ public class TraineeServiceImpl implements ITraineeService {
         createTraineeEntity(savedUser, request);
 
         meterRegistry.counter("gymcrm.trainee.created.count").increment();
-        return new RegisterProfileResponse(savedUser.getUsername(), savedUser.getPassword());
+        return new RegisterProfileResponse(savedUser.getUsername(), savedUser.getPlainPassword());
     }
 
     @Override
@@ -96,15 +97,14 @@ public class TraineeServiceImpl implements ITraineeService {
         traineeRepository.delete(trainee);
         userService.logout(username);
     }
-
     @Override
-    public void toggleActivation(String username) {
+    public void changeTraineeActivation(String username, boolean activate) {
         log.info("[{}] SERVICE Layer - Toggling activation for: {}", MDC.get("transactionId"), username);
-        userService.activateOrDeactivate(username);
-        userService.logout(username);
+        Trainee trainee = getTraineeEntityByUsername(username);
+        userService.activateOrDeactivate(username,activate);
+        log.info("[{}] SERVICE Layer - User '{}' is now {}",
+                MDC.get("transactionId"), username, trainee.getUser().isUserActive() ? "ACTIVE" : "INACTIVE");
     }
-
-
     @Override
     @Transactional(readOnly = true)
     public List<TrainingDto> getTrainingHistory(String username,

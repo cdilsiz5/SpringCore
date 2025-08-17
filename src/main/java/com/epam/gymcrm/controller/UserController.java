@@ -2,6 +2,7 @@ package com.epam.gymcrm.controller;
 
 import com.epam.gymcrm.request.user.ChangePasswordRequest;
 import com.epam.gymcrm.request.user.LoginRequest;
+import com.epam.gymcrm.response.JwtResponse;
 import com.epam.gymcrm.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,9 +33,8 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@RequestBody @Valid LoginRequest request) {
-        userService.login(request);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<JwtResponse> login(@RequestBody @Valid LoginRequest request) {
+        return userService.login(request);
     }
 
     @Operation(

@@ -43,5 +43,8 @@ openapi:
     url: https://www.apache.org/licenses/LICENSE-2.0
 
 security:
+  bruteforce:
+    max-attempts: 3
+    block-seconds: 300
   jwt:
     secret: 7A74h6Ne+6Dw2EQZ0VL7YpTeLYYa6iZ9Z3dJq1LC3Yg=
