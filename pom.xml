@@ -17,6 +17,7 @@
     <spring-boot.version>3.3.2</spring-boot.version>
     <lombok.version>1.18.32</lombok.version>
     <maven.compiler.release>${java.version}</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
   <dependencyManagement>

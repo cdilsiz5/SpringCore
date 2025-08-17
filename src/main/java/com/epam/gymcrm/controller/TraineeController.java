@@ -3,6 +3,7 @@ package com.epam.gymcrm.controller;
 import com.epam.gymcrm.dto.TraineeDto;
 import com.epam.gymcrm.dto.TrainerDto;
 import com.epam.gymcrm.dto.TrainingDto;
+import com.epam.gymcrm.model.enums.Specialization;
 import com.epam.gymcrm.request.trainee.CreateTraineeRequest;
 import com.epam.gymcrm.request.trainee.UpdateTraineeRequest;
 import com.epam.gymcrm.request.trainer.TrainerUsernameRequest;
@@ -114,19 +115,18 @@ public class TraineeController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "404", description = "Trainee not found")
     })
-    @GetMapping("/{username}/training-history")
+    @GetMapping("/{username}/trainings")
     public ResponseEntity<List<TrainingDto>> getTrainingHistory(
-
             @PathVariable String username,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) String trainerName,
-            @RequestParam(required = false) String trainerLastName) {
-
-        return ResponseEntity.ok(
-                traineeService.getTrainingHistory(username, from, to, trainerName, trainerLastName)
-        );
+            @RequestParam(required = false) Specialization trainingType
+    ) {
+        List<TrainingDto> trainings = traineeService.getTrainingHistory(username, from, to, trainerName, trainingType);
+        return ResponseEntity.ok(trainings);
     }
+
     @Operation(summary = "Get unassigned trainers", description = "List of trainers with no training assigned to this trainee")
     @ApiResponses(@ApiResponse(responseCode = "200", description = "OK",
             content = @Content(mediaType = "application/json",

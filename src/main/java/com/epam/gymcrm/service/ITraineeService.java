@@ -4,6 +4,7 @@ import com.epam.gymcrm.dto.TraineeDto;
 import com.epam.gymcrm.dto.TrainerDto;
 import com.epam.gymcrm.dto.TrainingDto;
 import com.epam.gymcrm.model.Trainee;
+import com.epam.gymcrm.model.enums.Specialization;
 import com.epam.gymcrm.request.trainee.CreateTraineeRequest;
 import com.epam.gymcrm.request.trainee.UpdateTraineeRequest;
 import com.epam.gymcrm.request.trainer.TrainerUsernameRequest;
@@ -71,13 +72,16 @@ public interface ITraineeService {
      * @param from             optional start date
      * @param to               optional end date
      * @param trainerName      optional trainer first name filter
-     * @param trainerLastName  optional trainer last name filter
+     * @param trainingType      optional training type filter
      * @return list of training DTOs matching the filter
      */
-    List<TrainingDto> getTrainingHistory( String username,
-                                         LocalDate from, LocalDate to,
-                                         String trainerName, String trainerLastName);
-
+    List<TrainingDto> getTrainingHistory(
+            String username,
+            LocalDate from,
+            LocalDate to,
+            String trainerName,
+            Specialization trainingType
+    ) ;
     /**
      * Fetches the trainee entity by its ID.
      *

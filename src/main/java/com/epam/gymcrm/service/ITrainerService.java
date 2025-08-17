@@ -64,8 +64,8 @@ public interface ITrainerService {
      * @param username trainer username whose trainings to fetch
      * @param from start date (optional)
      * @param to end date (optional)
-     * @param traineeName filter by trainee first name (optional)
-     * @param traineeLastName filter by trainee last name (optional)
+     * @param traineeName filter by trainee  name (optional)
+     * @param trainingType filter by training type name (optional)
      * @return list of matching trainings
      */
     List<TrainingDto> getTrainingHistory(
@@ -73,7 +73,7 @@ public interface ITrainerService {
             LocalDate from,
             LocalDate to,
             String traineeName,
-            String traineeLastName
+            String trainingType
     );
 
 

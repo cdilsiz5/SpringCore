@@ -8,6 +8,7 @@ import com.epam.gymcrm.mapper.TraineeMapper;
 import com.epam.gymcrm.mapper.TrainerMapper;
 import com.epam.gymcrm.mapper.TrainingMapper;
 import com.epam.gymcrm.model.*;
+import com.epam.gymcrm.model.enums.Specialization;
 import com.epam.gymcrm.repository.TraineeRepository;
 import com.epam.gymcrm.repository.TrainerRepository;
 import com.epam.gymcrm.repository.TrainingRepository;
@@ -107,18 +108,20 @@ public class TraineeServiceImpl implements ITraineeService {
     }
     @Override
     @Transactional(readOnly = true)
-    public List<TrainingDto> getTrainingHistory(String username,
+    public List<TrainingDto> getTrainingHistory(
+                                                String username,
                                                 LocalDate from,
                                                 LocalDate to,
                                                 String trainerName,
-                                                String trainerLastName) {
+                                                Specialization trainingType
+                                        ) {
         log.info("[{}] SERVICE - Getting training history for: {}", MDC.get("transactionId"), username);
 
         traineeRepository.findByUserUsername(username)
                 .orElseThrow(() -> new NotFoundException("Trainee not found: " + username));
 
         List<Training> trainings = trainingRepository.findHistoryForTrainee(
-                username, from, to, trainerName, trainerLastName
+                username, from, to, trainerName, trainingType
         );
 
         return trainingMapper.toTrainingDtoList(trainings);

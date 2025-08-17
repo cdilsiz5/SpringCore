@@ -92,35 +92,40 @@ public class TrainerController {
 
 
     @Operation(
-            summary = "Get training history",
-            description = "Returns a list of trainings for a user with optional filters (from, to, traineeName, traineeLastName)"
+            summary = "Get trainer's training history",
+            description = "Authenticated endpoint. Retrieves trainings by optional date range, trainee name, and training type."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = TrainingDto.class)))
+            @ApiResponse(responseCode = "200", description = "Training history retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Trainer not found")
     })
     @GetMapping("/{username}/trainings")
     @ResponseStatus(HttpStatus.OK)
     public List<TrainingDto> getTrainingHistory(
             @PathVariable String username,
+
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             @Parameter(description = "Start date (yyyy-MM-dd)", example = "2024-01-01")
             LocalDate from,
+
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             @Parameter(description = "End date (yyyy-MM-dd)", example = "2024-12-31")
             LocalDate to,
+
             @RequestParam(required = false)
-            @Parameter(description = "Trainee First Name", example = "Ali")
+            @Parameter(description = "Trainee Name", example = "Ali")
             String traineeName,
+
             @RequestParam(required = false)
-            @Parameter(description = "Trainee Last Name", example = "Veli")
-            String traineeLastName
+            @Parameter(description = "Training Type", example = "YOGA")
+            String trainingType
     ) {
-        return trainerService.getTrainingHistory( username, from, to, traineeName, traineeLastName);
+        return trainerService.getTrainingHistory(username, from, to, traineeName, trainingType);
     }
+
 
 
 

@@ -108,18 +108,21 @@ public class TrainerServiceImpl implements ITrainerService {
     @Override
     @Transactional(readOnly = true)
     public List<TrainingDto> getTrainingHistory(
-            String username, LocalDate from, LocalDate to, String traineeName, String traineeLastName) {
+            String username,
+            LocalDate from,
+            LocalDate to,
+            String traineeName,
+            String trainingType) {
 
-        log.info("[{}] SERVICE Layer - Fetching training history for trainer: {}",
+        log.info("[{}] SERVICE - Fetching training history for trainer: {}",
                 MDC.get("transactionId"), username);
 
-        List<Training> responses = trainingRepository
-                .findHistoryForTrainer(username, from, to, traineeName, traineeLastName);
-        
-        List<TrainingDto> result = trainingMapper.toTrainingDtoList(responses);
+        List<Training> trainings = trainingRepository
+                .findHistoryForTrainer(username, from, to, traineeName, trainingType);
 
-        return result;
+        return trainingMapper.toTrainingDtoList(trainings);
     }
+
 
 
 
