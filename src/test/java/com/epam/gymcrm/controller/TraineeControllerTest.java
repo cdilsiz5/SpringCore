@@ -153,37 +153,60 @@ class TraineeControllerTest {
         mockMvc.perform(delete(BASE_URL + "/ali.veli"))
                 .andExpect(status().isUnauthorized());
     }
+    @Test
+    @DisplayName("Should return 404 when toggling unknown trainee activation")
+    void testToggleTraineeActivation_notFound() throws Exception {
+        doThrow(new NotFoundException("Trainee not found: unknown"))
+                .when(traineeService).changeTraineeActivation("unknown", true);
+
+        mockMvc.perform(patch(BASE_URL + "/unknown/change-trainee-activation")
+                        .param("activate", "true"))
+                .andExpect(status().isNotFound());
+    }
+
 
     @Test
     @DisplayName("Should toggle trainee activation status")
     void testToggleTraineeActivation_success() throws Exception {
-        doNothing().when(traineeService).changeTraineeActivation("ali.veli",true);
+        doNothing().when(traineeService).changeTraineeActivation("ali.veli", true);
 
-        mockMvc.perform(patch(BASE_URL + "/ali.veli/toggle-activation"))
+        mockMvc.perform(patch(BASE_URL + "/ali.veli/change-trainee-activation")
+                        .param("activate", "true"))
                 .andExpect(status().isOk());
+
+        verify(traineeService).changeTraineeActivation("ali.veli", true);
     }
+
 
     @Test
     @DisplayName("Should return 404 when toggling activation for unknown trainee")
     void testChangeTraineeActivation_notFound() throws Exception {
         doThrow(new NotFoundException("Trainee not found"))
-                .when(traineeService).changeTraineeActivation("unknown",false);
+                .when(traineeService).changeTraineeActivation(eq("unknown"), eq(false));
 
-        mockMvc.perform(patch(BASE_URL + "/unknown/toggle-activation"))
+        mockMvc.perform(patch(BASE_URL + "/unknown/change-trainee-activation")
+                        .param("activate", "false"))
                 .andExpect(status().isNotFound());
     }
+
 
     @Test
     @DisplayName("Should return trainee training history")
     void testGetTrainingHistory_success() throws Exception {
-        when(traineeService.getTrainingHistory(any(), any(), any(), any(), any()))
+        LocalDate from = LocalDate.parse("2025-01-01");
+        LocalDate to   = LocalDate.parse("2025-12-31");
+
+        when(traineeService.getTrainingHistory(eq("ali.veli"), eq(from), eq(to), any(), any()))
                 .thenReturn(List.of(new TrainingDto()));
 
-        mockMvc.perform(get(BASE_URL + "/ali.veli/training-history")
+        mockMvc.perform(get(BASE_URL + "/ali.veli/trainings")
                         .param("from", "2025-01-01")
                         .param("to", "2025-12-31"))
                 .andExpect(status().isOk());
+
+        verify(traineeService).getTrainingHistory(eq("ali.veli"), eq(from), eq(to), isNull(), isNull());
     }
+
 
     @Test
     @DisplayName("Should return list of trainers not assigned to the trainee")

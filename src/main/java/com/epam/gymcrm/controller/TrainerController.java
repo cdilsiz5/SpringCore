@@ -84,9 +84,9 @@ public class TrainerController {
 
     @Operation(summary = "Toggle trainer activation", description = "Activate/deactivate trainer account")
     @ApiResponses(@ApiResponse(responseCode = "200", description = "Status toggled"))
-    @PatchMapping("/{username}/toggle-activation")
+    @PatchMapping("/{username}/change-activation")
     @ResponseStatus(HttpStatus.OK)
-    public void changeTrainerActivation(@PathVariable String username,@RequestParam boolean activate){
+    public void changeTrainerActivation(@PathVariable String username,@RequestParam("activate") boolean activate){
         trainerService.changeTrainerActivation(username,activate);
     }
 
